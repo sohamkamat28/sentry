@@ -1,0 +1,36 @@
+# The schema a deployment runs against is whatever `upgrade head` produced,
+# never whatever the models happened to say when a process started.
+#
+# Run as a Helm-style pre-install/pre-upgrade hook in a real pipeline; here it
+# is a Job the other workloads' readiness gates behind by way of the database
+# actually having tables.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migrate
+  annotations:
+    # Kustomize has no ordering primitive, so this carries the intent for
+    # whatever applies it. Applying everything at once is survivable: the API
+    # fails readiness until the schema exists rather than serving against a
+    # half-migrated database.
+    sentry.io/apply-order: "1"
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: sentry/api
+          args: ["alembic", "upgrade", "head"]
+          envFrom:
+            - configMapRef: { name: sentry-config }
+            - secretRef: { name: sentry-secrets }
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }

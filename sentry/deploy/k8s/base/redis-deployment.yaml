@@ -1,0 +1,39 @@
+# Cache, broker and lock. Never a system of record.
+#
+# Everything Redis holds has a Postgres-derived answer behind it, so a flush
+# costs throughput and liveness and never a fact.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: sentry-redis }
+  template:
+    metadata:
+      labels: { app: sentry-redis }
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports: [{ containerPort: 6379, name: redis }]
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: 500m, memory: 1Gi }
+          readinessProbe:
+            exec: { command: ["redis-cli", "ping"] }
+            periodSeconds: 5
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  selector: { app: sentry-redis }
+  ports: [{ port: 6379, targetPort: redis, name: redis }]

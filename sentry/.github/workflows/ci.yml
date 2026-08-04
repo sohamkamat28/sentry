@@ -1,0 +1,177 @@
+name: CI
+
+# Everything here runs on a push. The two checks that exist because they caught
+# real defects are the migration drift check and the schema-writer check — both
+# compare a claim the codebase makes about itself against what the code does,
+# and both failed the first time they were run.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: Python — engines, collectors, API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The ownership ladder's second rung runs `git log` against the
+          # scanned repositories. A shallow clone has no history to blame, so
+          # the rung would miss for want of a checkout rather than for want of
+          # an author — and the tests that cover it would pass vacuously.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: |
+          pip install -r worker/requirements.txt
+          pip install -e ./core -e ./worker
+          pip install pytest
+
+      - name: Build the scanned repositories
+        # Real git repositories with real history, built here rather than
+        # committed, so the blame rung is exercised against something git
+        # actually wrote.
+        run: ./estate/repos/build-repos.sh
+
+      - name: Tests
+        run: pytest worker/tests api/tests -q
+
+      - name: Schema writers
+        # Asserts the one-writer-per-column rule models.py claims in its own
+        # docstring. It found four stale declarations and one table nothing
+        # wrote on its first run.
+        run: python tools/check_schema_writers.py
+
+      - name: Migration drift
+        # Runs every migration against an empty database and asks Alembic what
+        # still differs from the models. Anything it finds is a model change
+        # somebody made without a migration.
+        run: python tools/check_migrations.py
+
+  migrations-postgres:
+    name: Migrations — PostgreSQL
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: sentry
+          POSTGRES_PASSWORD: sentry
+          POSTGRES_DB: sentry_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U sentry"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: |
+          pip install -r worker/requirements.txt
+          pip install -e ./core -e ./worker
+      - name: Drift on the production dialect
+        # SQLite is checked in the job above for structure and types; server
+        # defaults are only meaningful here. PostgreSQL is the production
+        # target and is compared strictly.
+        run: |
+          python tools/check_migrations.py \
+            --url postgresql+psycopg://sentry:sentry@localhost:5432/sentry_ci
+
+  go:
+    name: Go — agent, ingest, honeypot
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [agent, ingest, honeypot]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          cache-dependency-path: ${{ matrix.module }}/go.sum
+
+      - name: Vet
+        working-directory: ${{ matrix.module }}
+        run: go vet ./...
+
+      - name: Test
+        working-directory: ${{ matrix.module }}
+        # The BPF-dependent packages carry a build tag and are excluded on a
+        # runner with no kernel to attach to. Everything else — the symbol
+        # table reader, the identity resolver, the ring-buffer decoder, the
+        # store's clock handling — is host-testable and is tested.
+        run: go test ./... -count=1
+
+  build:
+    name: Images build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: api,      dockerfile: api/Dockerfile,      context: "." }
+          - { name: worker,   dockerfile: worker/Dockerfile,   context: "." }
+          - { name: ingest,   dockerfile: ingest/Dockerfile,   context: "." }
+          - { name: honeypot, dockerfile: honeypot/Dockerfile, context: "." }
+          - { name: console,  dockerfile: console/Dockerfile,  context: "console" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: false
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+
+  compose:
+    name: Compose config is valid
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Render
+        # Catches an anchor referenced before it is defined and a service
+        # pointing at a port nothing listens on — both of which have happened
+        # here, and neither of which any test would have caught.
+        run: |
+          docker compose -f deploy/compose/compose.yaml config >/dev/null
+          docker compose -f estate/compose.yaml config >/dev/null
+
+  console:
+    name: Console — types, prose, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: console/package-lock.json
+      - working-directory: console
+        run: npm ci
+      - name: Prose
+        # design/91-CONSOLE.md prohibits copy that defines a term for the
+        # reader. This is an operator tool, not a lesson.
+        working-directory: console
+        run: node scripts/lint-prose.mjs
+      - working-directory: console
+        run: npx tsc --noEmit
+      - working-directory: console
+        run: npm test --if-present
+      - working-directory: console
+        run: npm run build

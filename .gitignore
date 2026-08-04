@@ -1,0 +1,73 @@
+# Dependencies — restored from the lockfiles that are committed.
+node_modules/
+.venv/
+venv/
+
+# Build output. The console bundle comes from `npm run build`; the Go binaries
+# and the BPF object from `make build`.
+#
+# Named individually rather than ignoring `bin/` wholesale, because those
+# directories are not pure output: `agent/bin/Dockerfile` is source and has to
+# be committed for the image to build.
+dist/
+build/
+*.tsbuildinfo
+sentry-agent-linux-*
+sentry-ingest-linux-*
+sentry-honeypot-linux-*
+bpfload
+*.bpf.o
+
+# Python bytecode and test caches.
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Working state, not source. `estate/repos` is cloned at run time by the code
+# collector; the model is refitted by stage 05.
+sentry/estate/repos/
+*.joblib
+*.pkl
+
+# Local configuration and credentials. Nothing here is committed: every secret
+# is read from the environment, and `core/sentry_core/config.py` refuses a
+# placeholder value when ENV is prod.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+
+# Logs and databases.
+*.log
+*.sqlite
+*.sqlite3
+*.db
+
+# OS and editor noise.
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# Superseded prototypes. The design set that matters is the markdown in
+# `design/`; these are the earlier demo apps it was drafted against.
+design/app/
+design/codexsentinel/
+design/db/
+design/drizzle/
+design/public/
+design/tools/
+design/tests/
+design/package.json
+design/package-lock.json
+design/tsconfig*
+design/*.mjs
+design/*.ts
+design/*.docx

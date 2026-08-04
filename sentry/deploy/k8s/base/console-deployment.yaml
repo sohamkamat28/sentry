@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: console
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: sentry-console }
+  template:
+    metadata:
+      labels: { app: sentry-console }
+    spec:
+      containers:
+        - name: console
+          image: sentry/console
+          ports: [{ containerPort: 80, name: http }]
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { cpu: 200m, memory: 128Mi }
+          readinessProbe:
+            httpGet: { path: /, port: http }
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+          volumeMounts:
+            # nginx writes its pid and temp bodies; the image is otherwise
+            # static files and needs nothing else writable.
+            - { name: run, mountPath: /var/run }
+            - { name: cache, mountPath: /var/cache/nginx }
+      volumes:
+        - { name: run, emptyDir: {} }
+        - { name: cache, emptyDir: {} }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: console
+spec:
+  selector: { app: sentry-console }
+  ports: [{ port: 80, targetPort: http, name: http }]

@@ -1,0 +1,76 @@
+# Three rules carry security weight. The rest is defence in depth.
+
+# 1. The honeypot receives attacker traffic and must not be able to reach the
+#    estate. Egress to Postgres and DNS only — it writes probe rows and does
+#    nothing else outbound. This is what makes "compromising it yields nothing"
+#    a property of the deployment rather than a claim about the code.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: honeypot-egress
+spec:
+  podSelector:
+    matchLabels: { app: sentry-honeypot }
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - podSelector:
+            matchLabels: { app: sentry-postgres }
+      ports: [{ protocol: TCP, port: 5432 }]
+    - to:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: kube-system }
+      ports:
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
+---
+# 2. The agent has no listener and accepts no connection. An empty ingress rule
+#    set with the Ingress policy type denies everything inbound.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: agent-no-ingress
+spec:
+  podSelector:
+    matchLabels: { app: sentry-agent }
+  policyTypes: [Ingress]
+  ingress: []
+---
+# 3. The Kong Admin API is the single most dangerous surface in the deployment:
+#    anything that reaches it can rewrite the gateway. Only the worker writes to
+#    it, so only the worker may reach it.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kong-admin-restricted
+spec:
+  podSelector:
+    matchLabels: { app: kong }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: { app: sentry-worker }
+        # The control plane's action routes apply controls in-process, so it
+        # reaches the Admin API too. Named explicitly rather than covered by a
+        # broad rule, so the set of writers stays auditable.
+        - podSelector:
+            matchLabels: { app: sentry-api }
+      ports: [{ protocol: TCP, port: 8001 }]
+    # The proxy listeners stay open to the estate; only :8001 is restricted.
+    - ports:
+        - { protocol: TCP, port: 8000 }
+        - { protocol: TCP, port: 8443 }
+---
+# Default deny for the namespace, so a workload added later has to declare what
+# it needs rather than inheriting reachability.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {}

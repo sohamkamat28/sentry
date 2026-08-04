@@ -1,0 +1,51 @@
+# Single writer. High availability is out of scope for this build and saying so
+# is better than a StatefulSet with two replicas that quietly is not HA.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels: { app: sentry-postgres }
+  template:
+    metadata:
+      labels: { app: sentry-postgres }
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          ports: [{ containerPort: 5432, name: pg }]
+          env:
+            - name: POSTGRES_DB
+              value: sentry
+            - name: POSTGRES_USER
+              value: sentry
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: sentry-secrets, key: POSTGRES_PASSWORD }
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          resources:
+            requests: { cpu: 500m, memory: 1Gi }
+            limits: { cpu: "2", memory: 4Gi }
+          readinessProbe:
+            exec: { command: ["pg_isready", "-U", "sentry"] }
+            periodSeconds: 5
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/postgresql/data }
+  volumeClaimTemplates:
+    - metadata: { name: data }
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources: { requests: { storage: 50Gi } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  clusterIP: None
+  selector: { app: sentry-postgres }
+  ports: [{ port: 5432, targetPort: pg, name: pg }]

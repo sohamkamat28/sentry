@@ -1,0 +1,79 @@
+# The kernel sensor.
+#
+# A DaemonSet and not a Deployment, and that is the whole design: uprobes attach
+# to processes on the node the agent runs on. Two replicas on one node would
+# double-capture every exchange; a Deployment scheduled onto three of five nodes
+# would leave two nodes unobserved with nothing reporting a gap.
+#
+# The one privileged workload in the system. It has no listener, accepts no
+# inbound connection, and has exactly one egress target.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: agent
+spec:
+  selector:
+    matchLabels: { app: sentry-agent }
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # One node at a time. A cluster-wide restart is a cluster-wide blind spot,
+      # and stage 02 gates on captured vdays — a gap looks like silence.
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels: { app: sentry-agent }
+    spec:
+      hostPID: true
+      hostNetwork: false
+      # The agent resolves a task's cgroup by reading /proc/<pid>/cgroup and
+      # stat-ing the result under /sys/fs/cgroup. In its own cgroup namespace
+      # those paths do not resolve, the id cannot be determined, and the BPF
+      # filter drops every event from that task — capture goes partial with only
+      # a warning per pid to show for it.
+      hostUsers: true
+      tolerations:
+        - operator: Exists
+      containers:
+        - name: agent
+          image: sentry/agent
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["SYS_ADMIN", "BPF", "PERFMON", "SYS_RESOURCE", "SYS_PTRACE"]
+          env:
+            - name: INGEST_ENDPOINT
+              value: "ingest:9090"
+            # The estate's TLS ports. Not 443 by default: on a shared node that
+            # captures the platform's own package downloads and registers them
+            # as endpoints — which happened, 277 of them.
+            - name: APPROVER_PORTS
+              value: "443,8443"
+            # Empty. The cgroup path format is not portable — /docker/<id> on
+            # the cgroupfs driver, /system.slice/docker-<id>.scope on systemd,
+            # /kubepods/... on Kubernetes — and a fixed prefix that matches
+            # none of them makes the agent attach to nothing and report no
+            # error. The approver ports do the real narrowing.
+            - name: TARGET_CGROUP_PREFIX
+              value: ""
+            - name: BTF_PATH
+              value: /sys/kernel/btf/vmlinux
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+          volumeMounts:
+            - { name: debugfs, mountPath: /sys/kernel/debug }
+            - { name: btf, mountPath: /sys/kernel/btf, readOnly: true }
+            - { name: bpffs, mountPath: /sys/fs/bpf }
+            - { name: cgroupfs, mountPath: /sys/fs/cgroup, readOnly: true }
+            - { name: proc, mountPath: /host/proc, readOnly: true }
+            - { name: queue, mountPath: /var/lib/sentry/queue }
+      volumes:
+        - { name: debugfs, hostPath: { path: /sys/kernel/debug } }
+        - { name: btf, hostPath: { path: /sys/kernel/btf } }
+        - { name: bpffs, hostPath: { path: /sys/fs/bpf } }
+        - { name: cgroupfs, hostPath: { path: /sys/fs/cgroup } }
+        - { name: proc, hostPath: { path: /proc } }
+        # On-disk, so a queue that has not shipped survives a restart. An
+        # emptyDir would discard captures the ingest had not yet acknowledged.
+        - { name: queue, hostPath: { path: /var/lib/sentry/queue, type: DirectoryOrCreate } }

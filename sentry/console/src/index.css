@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Channel triplets, not hex.
+ *
+ * Tailwind's opacity modifier compiles `bg-line/40` to
+ * `rgb(var(--line) / 0.4)`, which is invalid CSS when the variable holds a hex
+ * — and Tailwind emits no rule at all rather than failing. `.bg-line\/40` and
+ * `.bg-bg\/60` were simply absent from the stylesheet, so the selected row in
+ * a list had no highlight and the drawer and command-palette scrims did not
+ * dim anything. Nothing in the build said so.
+ *
+ * Stored as `R G B` and consumed through `rgb()` so both the solid and the
+ * translucent forms work from one definition. */
+:root {
+  --bg: 11 13 16;
+  --panel: 18 21 26;
+  --line: 30 35 43;
+
+  --tx1: 230 233 239; /* primary */
+  --tx2: 182 190 205; /* secondary */
+  --tx3: 139 149 165; /* labels */
+  --tx4: 97 107 125; /* sub-labels, absent values */
+
+  /* Severity is the only thing colour encodes here. Nothing decorative is
+     allowed near these four hues, so a red cell always means the same thing. */
+  --ok: 78 201 176;
+  --warn: 255 180 84;
+  --crit: 255 92 92;
+  --info: 106 169 255;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    background: rgb(var(--bg));
+    color: rgb(var(--tx1));
+    @apply font-mono text-[13px] antialiased;
+  }
+  /* Tabular figures throughout. A column of counts whose width shifts as digits
+     change cannot be read at a glance, and glancing is what this is for. */
+  table,
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  ::selection {
+    background: rgb(var(--info));
+    color: rgb(var(--bg));
+  }
+}
+
+@layer components {
+  .cell {
+    @apply px-3 py-1.5 border-b border-line align-top;
+  }
+  .th {
+    @apply px-3 py-1.5 text-left text-[10.5px] uppercase tracking-wide text-tx3
+           border-b border-line font-normal sticky top-0 bg-panel z-10;
+  }
+  .panel {
+    @apply rounded-sm border border-line bg-panel;
+  }
+  .chip {
+    @apply inline-block rounded-sm border border-line px-1.5 py-0.5 text-[10.5px];
+  }
+  .btn {
+    @apply rounded-sm border border-line bg-panel px-2.5 py-1 text-[12px]
+           hover:border-tx4 disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+}

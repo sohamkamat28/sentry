@@ -1,0 +1,235 @@
+{
+  "realm": "sentry",
+  "enabled": true,
+  "displayName": "SENTRY",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "accessTokenLifespan": 900,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "roles": {
+    "realm": [
+      {
+        "name": "viewer",
+        "description": "Read every analytical surface. Cannot change anything."
+      },
+      {
+        "name": "analyst",
+        "description": "Propose controls, enrol decommissions, run scans. Cannot write to the gateway.",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "viewer"
+          ]
+        }
+      },
+      {
+        "name": "approver",
+        "description": "Apply and revert gateway controls, release Phase D. The second person.",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "analyst"
+          ]
+        }
+      },
+      {
+        "name": "admin",
+        "description": "Policy, weights, the virtual clock, retention.",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "approver"
+          ]
+        }
+      },
+      {
+        "name": "ci-gate",
+        "description": "Machine identity for the build gate. Submits a check, reads nothing else."
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "sentry-console",
+      "name": "SENTRY operator console",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/*"
+      },
+      "redirectUris": [
+        "http://localhost:5173/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173"
+      ],
+      "protocolMappers": [
+        {
+          "name": "sentry-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "sentry-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "email",
+            "claim.name": "email",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "sentry-api",
+      "name": "SENTRY control plane",
+      "enabled": true,
+      "bearerOnly": true,
+      "publicClient": false
+    },
+    {
+      "clientId": "sentry-ci",
+      "name": "SENTRY build gate",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "dev-ci-secret-change-me",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "sentry-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "sentry-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "sentry-judge",
+      "name": "SENTRY API Judge",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "dev-judge-secret-change-me",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true
+    }
+  ],
+  "users": [
+    {
+      "username": "viewer",
+      "email": "viewer@sentry.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Val",
+      "lastName": "Viewer",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "viewer",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "viewer"
+      ]
+    },
+    {
+      "username": "analyst",
+      "email": "analyst@sentry.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Ada",
+      "lastName": "Analyst",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "analyst",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "analyst"
+      ]
+    },
+    {
+      "username": "approver",
+      "email": "approver@sentry.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Priya",
+      "lastName": "Approver",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "approver",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "approver"
+      ]
+    },
+    {
+      "username": "admin",
+      "email": "admin@sentry.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Sam",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "admin"
+      ]
+    },
+    {
+      "username": "service-account-sentry-ci",
+      "enabled": true,
+      "serviceAccountClientId": "sentry-ci",
+      "realmRoles": [
+        "ci-gate"
+      ]
+    }
+  ],
+  "scopeMappings": [
+    {
+      "client": "sentry-console",
+      "roles": [
+        "viewer",
+        "analyst",
+        "approver",
+        "admin"
+      ]
+    }
+  ]
+}

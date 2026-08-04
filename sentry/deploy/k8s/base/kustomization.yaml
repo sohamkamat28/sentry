@@ -1,0 +1,52 @@
+# SENTRY — Kustomize base.
+#
+# Not the primary deployment path; compose is. Complete enough to be run rather
+# than pointed at, which is the standard the design set holds these to.
+#
+# Secrets are ExternalSecret stubs. No credential value is committed here, and
+# config.py refuses to start in prod with a placeholder — so a deployment that
+# skipped wiring the secret store fails at boot rather than running with
+# defaults.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: sentry
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: sentry
+    # Not applied to selectors. commonLabels did, which makes a label change a
+    # breaking change to every existing Deployment's immutable selector.
+    includeSelectors: false
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secrets.yaml
+  - postgres-statefulset.yaml
+  - redis-deployment.yaml
+  - api-deployment.yaml
+  - ingest-deployment.yaml
+  # beat is defined alongside worker: both run the same image, and keeping the
+  # "exactly one scheduler" constraint next to the thing it constrains is worth
+  # more than one file per row of the design's table.
+  - worker-deployment.yaml
+  - honeypot-deployment.yaml
+  - console-deployment.yaml
+  - agent-daemonset.yaml
+  - migrate-job.yaml
+  - networkpolicy.yaml
+
+images:
+  - name: sentry/api
+    newTag: dev
+  - name: sentry/worker
+    newTag: dev
+  - name: sentry/ingest
+    newTag: dev
+  - name: sentry/honeypot
+    newTag: dev
+  - name: sentry/agent
+    newTag: dev
+  - name: sentry/console
+    newTag: dev

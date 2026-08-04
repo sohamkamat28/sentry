@@ -1,0 +1,148 @@
+# Traffic profiles for the reference estate.
+#
+# The driver realises these as actual HTTPS requests against actual services.
+# Three profiles carry specific test weight and are marked below.
+
+services:
+  - service: core-accounts
+    endpoints:
+      - "GET /api/v1/accounts/{id}"
+      - "GET /api/v1/accounts/{id}/balance"
+    profile:
+      base_rate: 1200
+      weekly: [1.0, 1.0, 1.0, 1.0, 0.95, 0.35, 0.25]
+      hourly: business_hours
+      trend: flat
+
+  - service: core-deposits
+    endpoints: ["GET /api/v1/deposits/{id}", "POST /api/v1/deposits"]
+    calls: [core-accounts]          # east-west: creates graph depth
+    profile:
+      base_rate: 400
+      weekly: [1.0, 1.0, 1.0, 1.0, 0.9, 0.3, 0.2]
+      trend: flat
+
+  # REGRESSION GUARD: volume is rising while the weekly cycle dips at weekends.
+  # A forecast that does not deseasonalise reads the trough as decline and flags
+  # this endpoint pre-zombie. It must never be flagged.
+  - service: payments-upi
+    endpoints: ["POST /api/v1/upi/collect", "POST /api/v1/upi/pay"]
+    calls: [shadow-fx-rate]         # the only caller of the shadow endpoint
+    criticality: PAYMENT
+    profile:
+      base_rate: 8000
+      weekly: [1.0, 1.0, 1.0, 1.0, 1.1, 0.8, 0.7]
+      trend: growth
+      growth_pct_per_vday: 0.4
+
+  - service: payments-rtgs
+    endpoints: ["POST /api/v1/rtgs/transfer"]
+    criticality: SETTLEMENT         # tightest latency budget; throttle-exempt
+    profile:
+      base_rate: 900
+      weekly: [1.0, 1.0, 1.0, 1.0, 1.0, 0.1, 0.05]
+      trend: flat
+
+  - service: cards-auth
+    endpoints: ["POST /api/v1/cards/authorise"]
+    criticality: PAYMENT
+    profile:
+      base_rate: 5000
+      weekly: [1.0, 1.0, 1.0, 1.05, 1.2, 1.1, 0.9]
+      trend: flat
+
+  - service: finacle-bridge
+    endpoints:
+      - "POST /services/Finacle#GetBalance"
+      - "POST /services/Finacle#PostTransfer"
+    profile:
+      base_rate: 300
+      weekly: [1.0, 1.0, 1.0, 1.0, 0.9, 0.2, 0.1]
+      trend: flat
+
+  - service: kyc-service
+    endpoints: ["GET /api/v1/kyc/{id}", "POST /api/v1/kyc/verify"]
+    profile:
+      base_rate: 600
+      weekly: [1.0, 1.0, 1.0, 1.0, 0.9, 0.3, 0.2]
+      trend: flat
+
+  # REGRESSION GUARD: silent for 89 vdays at a stretch. A 30-day window
+  # classifies this as dead. It must stay ACTIVE.
+  - service: recon-quarterly
+    endpoints: ["POST /api/v1/recon/statutory"]
+    criticality: REGULATORY
+    profile:
+      schedule: quarterly
+      burst: 240
+
+  # The through-line zombie: decays from vday 25, silent from vday 40,
+  # classifies ZOMBIE at vday 130.
+  - service: legacy-balance
+    endpoints: ["GET /api/v1/legacy-balance"]
+    profile:
+      base_rate: 40
+      weekly: [1.0, 1.0, 1.0, 1.0, 0.9, 0.3, 0.2]
+      trend: decay
+      decay_start_vday: 25
+      decay_half_life_vdays: 6
+      silent_from_vday: 40
+
+  - service: nostro-sync
+    endpoints: ["GET /api/v1/nostro"]
+    profile:
+      base_rate: 25
+      weekly: [1.0, 1.0, 1.0, 1.0, 0.9, 0.4, 0.3]
+      trend: decay
+      decay_start_vday: 40
+      decay_half_life_vdays: 5
+      silent_from_vday: 55
+
+  # REGRESSION GUARD: registered in no gateway, present in no scanned repository.
+  # Only the kernel sensor can find it. Called directly by payments-upi.
+  - service: shadow-fx-rate
+    endpoints: ["GET /internal/fx/rate"]
+    registered_in_gateway: false
+    in_repository: false
+    profile:
+      base_rate: 3000
+      weekly: [1.0, 1.0, 1.0, 1.0, 1.0, 0.6, 0.5]
+      trend: flat
+
+  - service: partner-gateway
+    endpoints: ["GET /api/v1/partner/status"]
+    internet_reachable: true
+    profile:
+      base_rate: 700
+      weekly: [1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.6]
+      trend: flat
+
+# Scripted lifecycle events, fired on the virtual clock.
+events:
+  - vday: 25
+    action: begin_decay
+    target: legacy-balance
+  - vday: 40
+    action: go_silent
+    target: legacy-balance
+  - vday: 55
+    action: go_silent
+    target: nostro-sync
+  - vday: 60
+    action: new_caller
+    target: shadow-fx-rate
+    detail: "unregistered client begins calling from a new source"
+  - vday: 90
+    action: quarterly_burst
+    target: recon-quarterly
+    detail: "the endpoint a naive 30-day window would have killed"
+  - vday: 200
+    action: redeploy
+    target: legacy-balance
+    as: "legacy-balance-v2"
+    path: "/api/v2/balance-lookup"
+    detail: "same behaviour, new path — the resurrection case"
+  - vday: 210
+    action: external_scan
+    target: retired
+    detail: "scanner probes retired endpoints from a separate container"

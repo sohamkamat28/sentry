@@ -1,0 +1,46 @@
+# Serves retired routes.
+#
+# By the time a request reaches this service the sunset sequence has published
+# notices, migrated or throttled traffic, run a quarantine in which every
+# remaining caller was named, and returned 410. It has no route to any estate
+# system: compromising it yields nothing. The NetworkPolicy is what makes that
+# a property rather than an assurance.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: honeypot
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: sentry-honeypot }
+  template:
+    metadata:
+      labels: { app: sentry-honeypot }
+    spec:
+      containers:
+        - name: honeypot
+          image: sentry/honeypot
+          ports: [{ containerPort: 8088, name: http }]
+          envFrom:
+            - configMapRef: { name: sentry-config }
+            - secretRef: { name: sentry-secrets }
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { cpu: 200m, memory: 128Mi }
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 10
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: honeypot
+spec:
+  selector: { app: sentry-honeypot }
+  ports: [{ port: 8088, targetPort: http, name: http }]

@@ -1,0 +1,240 @@
+# The reference estate.
+#
+# Real services speaking real TLS, that SENTRY has no prior knowledge of. This is
+# a separate compose project from the platform and shares no volume with it: the
+# only channel between them is the kernel, so discovery has to actually discover
+# rather than read.
+#
+# The topology is two tiers on purpose. The driver calls the composite services;
+# the composite services call the leaf services. That second hop is the one that
+# matters — it is the only source of service-to-service call edges, and without
+# edges every blast radius is ZERO and the dependency argument cannot be made.
+#
+#   traffic ─┬─> payments-upi ──┬─> core-accounts /api/v1/accounts/balance
+#            │                  └─> shadow-fx-rate /internal/fx/rate
+#            ├─> settlement-rtgs ┬─> core-accounts /api/v1/accounts
+#            │                   └─> shadow-fx-rate /internal/fx/rate
+#            ├─> kyc-service
+#            └─> core-accounts /api/v1/legacy-balance
+name: sentry-estate
+
+networks:
+  sentry-net:
+    external: true
+
+# SERVICE_NAME is not decoration. The agent reads it out of /proc/<pid>/environ
+# to name the workload behind a cgroup, which is how an observation acquires a
+# caller and how the call graph acquires edges.
+x-service: &service
+  image: python:3.12-slim
+  command: ["python", "/server.py"]
+  depends_on: { certs: { condition: service_completed_successfully } }
+  networks: [sentry-net]
+
+services:
+  certs:
+    image: alpine/openssl:latest
+    volumes: ["certs:/certs"]
+    # Single line deliberately: a YAML folded scalar preserves newlines on
+    # more-indented continuation lines, which splits the command into fragments.
+    entrypoint: ["sh", "-c", "test -f /certs/server.crt || openssl req -x509 -newkey rsa:2048 -nodes -keyout /certs/server.key -out /certs/server.crt -days 365 -subj /CN=estate.local"]
+    restart: "no"
+
+  # ── Leaf tier ────────────────────────────────────────────────────────────
+  core-accounts:
+    <<: *service
+    environment:
+      SERVICE_NAME: core-accounts
+      PORT: "8443"
+    volumes:
+      - "./services/_runtime/estate_app.py:/estate_app.py:ro"
+      - "./services/_runtime/server.py:/server.py:ro"
+      - "./services/core-accounts/routes.py:/routes.py:ro"
+      - "certs:/certs:ro"
+
+  kyc-service:
+    <<: *service
+    environment:
+      SERVICE_NAME: kyc-service
+      PORT: "8443"
+    volumes:
+      - "./services/_runtime/estate_app.py:/estate_app.py:ro"
+      - "./services/_runtime/server.py:/server.py:ro"
+      - "./services/kyc-service/routes.py:/routes.py:ro"
+      - "certs:/certs:ro"
+
+  # Registered in no gateway and present in no scanned repository, and now not
+  # called by the traffic driver either. The only path to it is from another
+  # service, so the only way to find it is to observe that call.
+  shadow-fx-rate:
+    <<: *service
+    environment:
+      SERVICE_NAME: shadow-fx-rate
+      PORT: "8443"
+    volumes:
+      - "./services/_runtime/estate_app.py:/estate_app.py:ro"
+      - "./services/_runtime/server.py:/server.py:ro"
+      - "./services/shadow-fx-rate/routes.py:/routes.py:ro"
+      - "certs:/certs:ro"
+
+  # ── Composite tier ───────────────────────────────────────────────────────
+  payments-upi:
+    <<: *service
+    environment:
+      SERVICE_NAME: payments-upi
+      PORT: "8443"
+    volumes:
+      - "./services/_runtime/estate_app.py:/estate_app.py:ro"
+      - "./services/_runtime/server.py:/server.py:ro"
+      - "./services/payments-upi/routes.py:/routes.py:ro"
+      - "certs:/certs:ro"
+    depends_on:
+      certs: { condition: service_completed_successfully }
+      core-accounts: { condition: service_started }
+      shadow-fx-rate: { condition: service_started }
+
+  # The canary's migration target.
+  #
+  # Same path, same response shape, same dependencies as payments-upi. A canary
+  # shifts a proportion of live traffic onto this and compares error rates, so
+  # anything it measures has to be attributable to the migration rather than to
+  # the two services differing.
+  payments-upi-v2:
+    image: python:3.12-slim
+    command: ["python", "/server.py"]
+    depends_on:
+      certs: { condition: service_completed_successfully }
+      core-accounts: { condition: service_started }
+      shadow-fx-rate: { condition: service_started }
+    networks: [sentry-net]
+    environment:
+      SERVICE_NAME: payments-upi-v2
+      PORT: "8443"
+    volumes:
+      - ./services/_runtime/estate_app.py:/estate_app.py:ro
+      - ./services/_runtime/server.py:/server.py:ro
+      - ./services/payments-upi-v2/routes.py:/routes.py:ro
+      - certs:/certs:ro
+
+  settlement-rtgs:
+    <<: *service
+    environment:
+      SERVICE_NAME: settlement-rtgs
+      PORT: "8443"
+    volumes:
+      - "./services/_runtime/estate_app.py:/estate_app.py:ro"
+      - "./services/_runtime/server.py:/server.py:ro"
+      - "./services/settlement-rtgs/routes.py:/routes.py:ro"
+      - "certs:/certs:ro"
+    depends_on:
+      certs: { condition: service_completed_successfully }
+      core-accounts: { condition: service_started }
+      shadow-fx-rate: { condition: service_started }
+
+  # The core banking connector. SOAP over TLS, with a WSDL the legacy collector
+  # parses — four operations behind one URL, which is why a registry that
+  # recorded the URL would be describing the transport and not the surface.
+  finacle-bridge:
+    <<: *service
+    environment:
+      SERVICE_NAME: finacle-bridge
+      PORT: "8443"
+    volumes:
+      - "./services/_runtime/estate_app.py:/estate_app.py:ro"
+      - "./services/_runtime/server.py:/server.py:ro"
+      - "./services/finacle-bridge/routes.py:/routes.py:ro"
+      - "certs:/certs:ro"
+    # Exposed so the legacy collector fetches the contract over TLS, the way a
+    # deployment would, rather than reading a copy off disk.
+    ports: ["18443:8443"]
+
+  # ── Leaf tier, second wave ───────────────────────────────────────────────
+  #
+  # The five workloads the design specifies that the estate did not have. Each
+  # carries a requirement nothing else exercises, and together they take the
+  # estate past the thirty endpoints the isolation forest needs before it will
+  # fit at all — which is why stage 05 has reported `fitted: false` on every run
+  # this system has ever made.
+  cards-auth:
+    <<: *service
+    environment:
+      SERVICE_NAME: cards-auth
+      PORT: "8443"
+    volumes:
+      - "./services/_runtime/estate_app.py:/estate_app.py:ro"
+      - "./services/_runtime/server.py:/server.py:ro"
+      - "./services/cards-auth/routes.py:/routes.py:ro"
+      - "certs:/certs:ro"
+
+  # Silent for eighty-nine vdays at a stretch. Must stay ACTIVE.
+  recon-quarterly:
+    <<: *service
+    environment:
+      SERVICE_NAME: recon-quarterly
+      PORT: "8443"
+    volumes:
+      - "./services/_runtime/estate_app.py:/estate_app.py:ro"
+      - "./services/_runtime/server.py:/server.py:ro"
+      - "./services/recon-quarterly/routes.py:/routes.py:ro"
+      - "certs:/certs:ro"
+
+  # No CODEOWNERS, no repository, no team tag — rung 4, unresolved.
+  nostro-sync:
+    <<: *service
+    environment:
+      SERVICE_NAME: nostro-sync
+      PORT: "8443"
+    volumes:
+      - "./services/_runtime/estate_app.py:/estate_app.py:ro"
+      - "./services/_runtime/server.py:/server.py:ro"
+      - "./services/nostro-sync/routes.py:/routes.py:ro"
+      - "certs:/certs:ro"
+
+  # ── Composite tier ───────────────────────────────────────────────────────
+  core-deposits:
+    <<: *service
+    environment:
+      SERVICE_NAME: core-deposits
+      PORT: "8443"
+      UPSTREAM_ACCOUNTS: https://core-accounts:8443
+    volumes:
+      - "./services/_runtime/estate_app.py:/estate_app.py:ro"
+      - "./services/_runtime/server.py:/server.py:ro"
+      - "./services/core-deposits/routes.py:/routes.py:ro"
+      - "certs:/certs:ro"
+
+  # The only internet-reachable surface in the estate.
+  partner-gateway:
+    <<: *service
+    environment:
+      SERVICE_NAME: partner-gateway
+      PORT: "8443"
+      UPSTREAM_ACCOUNTS: https://core-accounts:8443
+      UPSTREAM_UPI: https://payments-upi:8443
+    volumes:
+      - "./services/_runtime/estate_app.py:/estate_app.py:ro"
+      - "./services/_runtime/server.py:/server.py:ro"
+      - "./services/partner-gateway/routes.py:/routes.py:ro"
+      - "certs:/certs:ro"
+
+  # curl links against OpenSSL, so the client side of every call is probed too.
+  traffic:
+    image: alpine/curl:latest
+    environment: { SERVICE_NAME: traffic }
+    volumes: ["./driver/loop.sh:/loop.sh:ro"]
+    entrypoint: ["sh", "/loop.sh"]
+    depends_on:
+      - core-accounts
+      - kyc-service
+      - payments-upi
+      - settlement-rtgs
+      - finacle-bridge
+      - cards-auth
+      - core-deposits
+      - nostro-sync
+      - partner-gateway
+      - recon-quarterly
+    networks: [sentry-net]
+
+volumes:
+  certs:

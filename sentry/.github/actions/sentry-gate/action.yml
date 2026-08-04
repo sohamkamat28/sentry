@@ -1,0 +1,79 @@
+name: SENTRY gate
+description: >-
+  Fail a pull request that introduces an endpoint with no owner, no
+  authentication, no catalogue entry, or the behaviour of one already retired.
+
+# The point of running at authorship rather than at discovery: the sensor finds
+# a shadow endpoint months after somebody wrote it, and by then it has callers.
+# Here it is still a diff.
+#
+# The gate does not decide anything itself. It extracts route declarations from
+# the changed files and posts them to the control plane, which matches them
+# against the endpoints *it* records as retired. A gate that accepted a list of
+# retired endpoints from CI could be talked out of its own finding by the change
+# it is inspecting.
+
+inputs:
+  endpoint:
+    description: Control plane base URL, e.g. https://sentry.bank.internal
+    required: true
+  token:
+    description: >-
+      CI service token. Scoped to POST /api/v1/gate/check only — the ci-gate
+      role can submit a build for a verdict and cannot read the estate.
+    required: true
+  fail-on:
+    description: error | warn | never
+    required: false
+    default: error
+  paths:
+    description: Newline-separated globs to scan. Defaults to the whole diff.
+    required: false
+    default: ""
+  base-ref:
+    description: Ref to diff against. Defaults to the pull request base.
+    required: false
+    default: ""
+
+outputs:
+  passed:
+    description: Whether every check passed.
+    value: ${{ steps.gate.outputs.passed }}
+  checks:
+    description: The full check result as JSON.
+    value: ${{ steps.gate.outputs.checks }}
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve the diff
+      id: diff
+      shell: bash
+      run: |
+        set -euo pipefail
+        base="${{ inputs.base-ref }}"
+        if [ -z "$base" ]; then
+          base="${{ github.event.pull_request.base.sha || 'HEAD~1' }}"
+        fi
+        # Added and modified files only. A deleted file declares no route, and
+        # treating a deletion as a declaration would fail a pull request for
+        # removing the very endpoint this system asked somebody to remove.
+        git diff --name-only --diff-filter=AM "$base" HEAD > /tmp/sentry-changed.txt || true
+        echo "count=$(wc -l < /tmp/sentry-changed.txt | tr -d ' ')" >> "$GITHUB_OUTPUT"
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Extract routes and submit
+      id: gate
+      shell: bash
+      env:
+        SENTRY_ENDPOINT: ${{ inputs.endpoint }}
+        SENTRY_TOKEN: ${{ inputs.token }}
+        SENTRY_FAIL_ON: ${{ inputs.fail-on }}
+        SENTRY_PATHS: ${{ inputs.paths }}
+        GH_REPO: ${{ github.repository }}
+        GH_PR: ${{ github.event.pull_request.number || 0 }}
+        GH_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      run: python "${{ github.action_path }}/gate.py" /tmp/sentry-changed.txt

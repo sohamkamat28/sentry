@@ -1,0 +1,42 @@
+name: SENTRY gate
+
+# The loop closing on itself: this repository runs the gate it ships.
+#
+# It is not a smoke test. A pull request here that declares a route with no
+# owner, no authentication, no catalogue entry, or the behaviour of something
+# already retired fails for the same reason a pull request in a bank's
+# repository would.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write   # annotations on the diff
+
+jobs:
+  gate:
+    name: Pre-merge route check
+    runs-on: ubuntu-latest
+    # Skipped rather than failed when no deployment is configured. A fork has no
+    # access to the secret, and failing every fork's pull request on a missing
+    # credential would teach contributors to ignore this check.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the Action diffs against the base ref
+
+      - name: Install the collector
+        # So the gate extracts routes with exactly the rules stage 01 uses.
+        # Without it the Action falls back to a vendored copy of the same
+        # patterns; two extractors that disagree would let the gate pass a route
+        # the collector later reports as shadow.
+        run: |
+          pip install -e ./core -e ./worker
+
+      - uses: ./.github/actions/sentry-gate
+        with:
+          endpoint: ${{ secrets.SENTRY_URL }}
+          token: ${{ secrets.SENTRY_CI_TOKEN }}
+          fail-on: error

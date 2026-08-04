@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package sentry.v1;
+
+option go_package = "github.com/sentry/contracts/gen/go/sentry/v1;sentryv1";
+
+// ObservationIngest carries captured request metadata from the kernel agent to
+// the ingest service.
+//
+// There is deliberately no payload or body field anywhere in this file. Request
+// and response bodies are matched against data-class patterns inside the BPF
+// program and discarded in the same kernel operation. Making payload transport
+// unrepresentable on the wire is what turns the privacy property from a policy
+// into a structural guarantee.
+service ObservationIngest {
+  rpc Stream(stream ObservationBatch) returns (stream IngestAck);
+}
+
+message ObservationBatch {
+  string agent_id = 1;
+  string agent_version = 2;
+  string node = 3;
+  repeated Observation items = 4;
+}
+
+message Observation {
+  // Wall clock at capture. The analysis time base (vday) is stamped by ingest
+  // from the shared virtual clock, never taken from the agent, so a skewed node
+  // cannot corrupt windowing.
+  int64 wall_unix_ns = 1;
+
+  string method = 2;
+  string path_raw = 3;
+  string host = 4;
+  uint32 port = 5;
+  uint32 status = 6;
+  uint32 latency_us = 7;
+  uint32 req_bytes = 8;
+  uint32 resp_bytes = 9;
+
+  bool auth_present = 10;
+  string auth_scheme = 11;
+  string tls_version = 12;
+  repeated DataClass data_classes = 13;
+
+  string peer_service = 14;
+  string peer_ip = 15;
+  uint32 pid = 16;
+  uint64 cgroup_id = 17;
+
+  // Set when an HTTP/2 frame was captured but HPACK could not be resolved in
+  // kernel. Userspace completes the record; unresolved events are counted.
+  bool needs_h2_decode = 18;
+  Direction direction = 19;
+  string tls_library = 20;
+}
+
+enum Direction {
+  DIRECTION_UNSPECIFIED = 0;
+  DIRECTION_INGRESS = 1;
+  DIRECTION_EGRESS = 2;
+}
+
+enum DataClass {
+  DATA_CLASS_UNSPECIFIED = 0;
+  DATA_CLASS_PAN = 1;
+  DATA_CLASS_AADHAAR = 2;
+  DATA_CLASS_IFSC = 3;
+  DATA_CLASS_ACCOUNT_NO = 4;
+  DATA_CLASS_CARD = 5;
+  DATA_CLASS_CVV = 6;
+  DATA_CLASS_DOB = 7;
+}
+
+message IngestAck {
+  uint64 accepted = 1;
+  uint64 rejected = 2;
+  string reason = 3;
+}

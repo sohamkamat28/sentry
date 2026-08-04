@@ -1,0 +1,76 @@
+{
+  "_comment": [
+    "The employment directory the ownership ladder's fourth rung consults.",
+    "",
+    "Its job is not to find an owner — the rungs above do that — but to decide",
+    "whether the owner they found still works here. An endpoint attributed to",
+    "somebody who left is worse than one attributed to nobody: it reads as",
+    "resolved on every report while the escalation goes to an address no one",
+    "opens.",
+    "",
+    "martin.weiss is the case that matters. He is the last author of the",
+    "legacy-balance handler, which is the endpoint this estate retires, and he",
+    "has departed with no successor. The ladder must keep him on the record as",
+    "the only lead anyone has, drop confidence to 0.5x, set reachable false, and",
+    "name the department head — rather than blanking the owner and losing the",
+    "lead, or leaving him looking contactable."
+  ],
+  "people": [
+    {
+      "email": "priya.raman@bank.example",
+      "name": "Priya Raman",
+      "team": "core-banking",
+      "employed": true,
+      "manager": "elena.rossi@bank.example"
+    },
+    {
+      "email": "ada.okafor@bank.example",
+      "name": "Ada Okafor",
+      "team": "compliance-platform",
+      "employed": true,
+      "manager": "elena.rossi@bank.example"
+    },
+    {
+      "email": "johan.lindqvist@bank.example",
+      "name": "Johan Lindqvist",
+      "team": "payments",
+      "employed": true,
+      "manager": "tomas.varga@bank.example"
+    },
+    {
+      "email": "wei.chen@bank.example",
+      "name": "Wei Chen",
+      "team": "settlement",
+      "employed": true,
+      "manager": "tomas.varga@bank.example"
+    },
+    {
+      "email": "martin.weiss@bank.example",
+      "name": "Martin Weiss",
+      "team": "core-banking",
+      "employed": false,
+      "successor": null,
+      "department_head": "elena.rossi@bank.example"
+    },
+    {
+      "email": "sofia.almeida@bank.example",
+      "name": "Sofia Almeida",
+      "team": "payments",
+      "employed": false,
+      "successor": "johan.lindqvist@bank.example",
+      "department_head": "tomas.varga@bank.example"
+    },
+    {
+      "email": "elena.rossi@bank.example",
+      "name": "Elena Rossi",
+      "team": "core-banking",
+      "employed": true
+    },
+    {
+      "email": "tomas.varga@bank.example",
+      "name": "Tomas Varga",
+      "team": "payments",
+      "employed": true
+    }
+  ]
+}

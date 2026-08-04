@@ -1,0 +1,14 @@
+# Finacle interface inventory export.
+#
+# How a core banking platform publishes what it exposes. The backing datastore
+# per interface is the column the other three collectors have no way to know:
+# a WSDL does not carry it, a gateway route does not, and a generated SOAP
+# client has no reference to a table in it. It is where stage 03's datastore
+# edges come from, and therefore where a blast radius learns that retiring an
+# operation touches the general ledger.
+INTERFACE_NAME,SERVICE_PATH,OPERATION_NAME,BACKING_STORE,MODULE
+CustomerService,https://finacle-bridge:8443/finacle/CustomerService,GetCustomerBalance,FINACLE.ACCT_MASTER,CORE
+CustomerService,https://finacle-bridge:8443/finacle/CustomerService,GetCustomerKyc,FINACLE.KYC_MASTER,CORE
+CustomerService,https://finacle-bridge:8443/finacle/CustomerService,PostLedgerEntry,FINACLE.GL_LEDGER,CORE
+CustomerService,https://finacle-bridge:8443/finacle/CustomerService,GetNostroPosition,FINACLE.NOSTRO_POS,TREASURY
+NostroService,https://finacle-bridge:8443/finacle/NostroService,ReconcileNostro,FINACLE.NOSTRO_POS,TREASURY

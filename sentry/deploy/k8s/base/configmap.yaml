@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sentry-config
+data:
+  SENTRY_ENV: "prod"
+  LOG_FORMAT: "json"
+
+  REDIS_URL: "redis://redis:6379/0"
+  KONG_ADMIN_URL: "http://kong-admin:8001"
+  KONG_PROXY_URL: "http://kong-proxy:8000"
+  # Controls that read connection state are judged here. ssl_protocol is empty
+  # on the plain listener, so a tls-min pre-function rejects every request over
+  # :8000 and the measurement describes a transport no caller uses.
+  KONG_PROXY_TLS_URL: "https://kong-proxy:8443"
+
+  MINIO_ENDPOINT: "http://minio:9000"
+  WORM_BUCKET: "sentry-worm"
+  WORM_RETAIN_YEARS: "7"
+
+  SIEM_HOST: "rsyslog"
+  SIEM_PORT: "514"
+  SIEM_FORMAT: "cef"
+
+  HONEYPOT_UPSTREAM: "http://honeypot:8088"
+
+  # 86400 makes a vday a calendar day, which is the production setting. Lower
+  # values compress the timeline for demonstration; the analysis path is
+  # identical either way.
+  VCLOCK_SCALE_SECONDS: "86400"
+  SCAN_INTERVAL_VHOURS: "6"
+  SCHEDULER_ENABLED: "true"
+
+  # Coverage claims, not preferences. An endpoint is only "absent from code"
+  # with respect to the repositories named here.
+  CODE_REPO_PATHS: ""
+  LEGACY_WSDL_URLS: ""
+  LEGACY_REGISTRY_PATH: ""
+  HR_DIRECTORY_SOURCE: ""

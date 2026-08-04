@@ -1,0 +1,17 @@
+[project]
+name = "sentry-core"
+version = "0.1.0"
+description = "Shared domain model, configuration and time base for SENTRY services."
+requires-python = ">=3.12"
+dependencies = [
+    "SQLAlchemy>=2.0.36",
+    "pydantic>=2.10.4",
+    "pydantic-settings>=2.7.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["sentry_core*"]

@@ -1,0 +1,50 @@
+# The hot path.
+#
+# Deliberately not ordered after the API, which is what writes the vclock row it
+# needs to stamp an observation. Making the hot-path writer wait on the control
+# plane would couple an availability requirement to a convenience one. Instead
+# it reports itself unready until the clock is readable and refuses batches with
+# 503 while it is not, so the agent holds them and redelivers.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingest
+spec:
+  replicas: 3
+  selector:
+    matchLabels: { app: sentry-ingest }
+  template:
+    metadata:
+      labels: { app: sentry-ingest }
+    spec:
+      containers:
+        - name: ingest
+          image: sentry/ingest
+          ports: [{ containerPort: 9090, name: grpc }]
+          envFrom:
+            - configMapRef: { name: sentry-config }
+            - secretRef: { name: sentry-secrets }
+          resources:
+            requests: { cpu: 200m, memory: 256Mi }
+            limits: { cpu: "1", memory: 512Mi }
+          readinessProbe:
+            httpGet: { path: /readyz, port: 9091 }
+            periodSeconds: 5
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingest
+spec:
+  selector: { app: sentry-ingest }
+  # None. Batches are independent and stateless; pinning an agent to one replica
+  # would concentrate load rather than spread it.
+  sessionAffinity: None
+  ports:
+    - { port: 9090, targetPort: grpc, name: grpc }

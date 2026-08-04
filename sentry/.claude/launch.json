@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "sentry-console",
+      "url": "http://localhost:5173",
+      "port": 5173
+    },
+    {
+      "name": "sentry-api",
+      "url": "http://localhost:8080",
+      "port": 8080
+    }
+  ]
+}

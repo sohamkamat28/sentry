@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: sentry-worker }
+  template:
+    metadata:
+      labels: { app: sentry-worker }
+    spec:
+      containers:
+        - name: worker
+          image: sentry/worker
+          args: ["celery", "-A", "sentry_worker.tasks", "worker", "-l", "info", "-Q", "sentry"]
+          envFrom:
+            - configMapRef: { name: sentry-config }
+            - secretRef: { name: sentry-secrets }
+          resources:
+            requests: { cpu: 500m, memory: 1Gi }
+            # The two memory peaks in the system are the Isolation Forest fit
+            # and the Judge's shadow-pair run. The limit accommodates both.
+            limits: { cpu: "2", memory: 2Gi }
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            # Read-only. The collector reads source and git history to attribute
+            # an endpoint to a team; nothing in SENTRY writes to a scanned
+            # repository, and a writable mount would make that possible rather
+            # than impossible.
+            - { name: repos, mountPath: /repos, readOnly: true }
+      volumes:
+        - { name: tmp, emptyDir: {} }
+        - { name: repos, emptyDir: {} }
+---
+# Exactly one replica, and Recreate rather than RollingUpdate.
+#
+# Two schedulers would each dispatch every tick, so every stage would run twice
+# per interval. The Redis lock serialises the resulting cycles, which turns the
+# duplication into a stream of skips rather than corruption — but the schedule
+# would still be running at half its configured cadence with nothing obviously
+# wrong. Recreate guarantees the old beat is gone before the new one starts.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: beat
+spec:
+  replicas: 1
+  strategy: { type: Recreate }
+  selector:
+    matchLabels: { app: sentry-beat }
+  template:
+    metadata:
+      labels: { app: sentry-beat }
+    spec:
+      containers:
+        - name: beat
+          image: sentry/worker
+          args: ["celery", "-A", "sentry_worker.tasks", "beat", "-l", "info"]
+          envFrom:
+            - configMapRef: { name: sentry-config }
+            - secretRef: { name: sentry-secrets }
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 200m, memory: 256Mi }
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+          volumeMounts:
+            - { name: state, mountPath: /var/lib/sentry }
+      volumes:
+        - { name: state, emptyDir: {} }

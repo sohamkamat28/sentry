@@ -1,0 +1,144 @@
+# Kong declarative configuration — the gateway registry.
+#
+# This file is the institution's *documented* API surface, and it is
+# deliberately incomplete with respect to what the estate actually serves. That
+# gap is the product's subject matter, not an oversight:
+#
+#   /internal/fx/rate      served, called by two payment services, absent here.
+#                          Shadow: traffic present, gateway absent, code absent.
+# /api/v1/legacy-balance is the other half of the argument. It *is* declared
+# here — registered, routed, reachable — and nothing calls it any more. That is
+# a zombie rather than a shadow: the gateway knows about it, which is precisely
+# why it is still serving and still exposed. Stage 11 retires it through the
+# phased sunset, and it needs a route to attach each phase's control to.
+#
+# Registering either would make the discovery claim circular — SENTRY would be
+# reading them out of this file rather than observing them. Stage 03 compares
+# what the sensor saw against what this registry knows, and the difference is
+# the finding.
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: core-accounts
+    url: https://core-accounts:8443
+    retries: 3
+    connect_timeout: 5000
+    read_timeout: 10000
+    tags: ["criticality:customer", "team:core-banking"]
+    routes:
+      - name: accounts-detail
+        paths: ["~/api/v1/accounts/\\d+$"]
+        strip_path: false
+        methods: ["GET"]
+      - name: accounts-balance
+        paths: ["~/api/v1/accounts/balance/\\d+$"]
+        strip_path: false
+        methods: ["GET"]
+      - name: legacy-balance
+        paths: ["/api/v1/legacy-balance"]
+        strip_path: false
+        methods: ["GET"]
+
+  - name: kyc-service
+    url: https://kyc-service:8443
+    retries: 3
+    connect_timeout: 5000
+    read_timeout: 10000
+    tags: ["criticality:regulatory", "team:compliance"]
+    routes:
+      - name: kyc-lookup
+        paths: ["~/api/v1/kyc/\\d+$"]
+        strip_path: false
+        methods: ["GET"]
+
+  - name: payments-upi
+    url: https://payments-upi:8443
+    retries: 2
+    connect_timeout: 2000
+    read_timeout: 5000
+    tags: ["criticality:payment", "team:payments"]
+    routes:
+      - name: upi-payment
+        paths: ["~/api/v1/payments/upi/[A-Za-z0-9]+$"]
+        strip_path: false
+        methods: ["GET"]
+
+  - name: settlement-rtgs
+    url: https://settlement-rtgs:8443
+    retries: 2
+    connect_timeout: 2000
+    read_timeout: 5000
+    tags: ["criticality:settlement", "team:payments"]
+    routes:
+      - name: rtgs-settlement
+        paths: ["~/api/v1/settlement/rtgs/[A-Za-z0-9]+$"]
+        strip_path: false
+        methods: ["GET"]
+
+  # The SOAP connector.
+  #
+  # One URL with four operations behind it, distinguished by the SOAPAction
+  # header rather than the path — which is why the Judge has to synthesise a
+  # SOAP envelope to replay one at all. Without a route here the shadow pair
+  # cannot be built and the body synthesis is never exercised against a real
+  # service.
+  - name: finacle-bridge
+    url: https://finacle-bridge:8443
+    retries: 2
+    connect_timeout: 2000
+    read_timeout: 5000
+    tags: ["criticality:regulatory", "team:core-banking"]
+    routes:
+      - name: finacle-customerservice
+        paths: ["/finacle/CustomerService"]
+        strip_path: false
+        methods: ["POST"]
+
+  # The canary's migration target, so weights can be shifted onto something the
+  # gateway already routes to.
+  - name: payments-upi-v2
+    url: https://payments-upi-v2:8443
+    retries: 2
+    connect_timeout: 2000
+    read_timeout: 5000
+    tags: ["criticality:payment", "team:payments"]
+    routes:
+      - name: upi-payment-v2
+        paths: ["~/api/v2/payments/upi/[A-Za-z0-9]+$"]
+        strip_path: false
+        methods: ["GET"]
+
+# The second wave of estate services is not declared here.
+#
+# `kong config db_import` assigns its own entity ids, so importing a service
+# whose name already exists raises `UNIQUE violation detected on {name=...}` and
+# the whole import — every service in this file — fails with it. That is the same
+# non-idempotency the consumers hit, and it bites the moment anything creates a
+# service through the Admin API, which stage 10 and the canary both do.
+#
+# The five are provisioned by the kong-services job instead, which PUTs by name
+# and so upserts. Splitting them out keeps this file re-importable on every
+# `docker compose up` rather than only on the first.
+
+# No plugins are declared.
+#
+# Every plugin on this gateway is one SENTRY put there through the Admin API at
+# stage 10, so `control.state = APPLIED` means a plugin id came back from a 2xx
+# and nothing else. Seeding plugins here would make the applied set
+# indistinguishable from the declared set, and the audit trail would prove
+# nothing.
+plugins: []
+
+# Consumers are estate facts and are provisioned, but not from here.
+#
+# They are who calls the bank, and they exist whether or not SENTRY has ever
+# proposed an auth control — a gateway with no consumers is not a gateway with
+# strict authentication, it is one where every auth plugin rejects everything.
+#
+# `kong config db_import` is not idempotent for credentials: re-running it
+# raises a UNIQUE violation on the key and the job exits non-zero, so a second
+# `docker compose up` failed on a stack that was already correct. The consumers
+# and their keys are created instead by the kong-consumers job, which uses the
+# Admin API and treats an existing identical credential as success.
+consumers: []
