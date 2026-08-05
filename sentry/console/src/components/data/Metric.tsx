@@ -17,6 +17,8 @@ interface Props {
   sub?: string;
   tone?: Tone;
   loading?: boolean;
+  /** A failed read withholds the value and says why; it never falls through to zero. */
+  error?: unknown;
   /** Counts derived from a degraded source are marked rather than presented as complete. */
   degraded?: boolean;
   children?: ReactNode;
@@ -30,22 +32,30 @@ interface Props {
  * made — that shipped once and is the reason this component owns the rule rather
  * than leaving it to each caller.
  */
-export function Metric({ value, label, sub, tone = "dim", loading, degraded, children }: Props) {
-  const pending = loading || value === undefined || value === null;
+export function Metric({ value, label, sub, tone = "dim", loading, error, degraded, children }: Props) {
+  const failed = error != null;
+  const pending = loading || failed || value === undefined || value === null;
+  const failure = error instanceof Error ? error.message : failed ? String(error) : null;
 
   return (
     <div className="rounded-sm border border-line bg-panel px-3 py-2.5">
       <div
         className="font-mono text-2xl leading-none tabular-nums"
-        style={{ color: pending ? "var(--tx3)" : TONE[tone] }}
-        aria-busy={pending || undefined}
+        style={{ color: failed ? "var(--crit)" : pending ? "var(--tx3)" : TONE[tone] }}
+        aria-busy={(loading && !failed) || undefined}
       >
         {pending ? "—" : value}
       </div>
       <div className="mt-1.5 text-[10.5px] uppercase tracking-wide text-tx3">{label}</div>
       {(sub || pending || degraded) && (
         <div className="mt-0.5 text-[10.5px] text-tx4">
-          {pending ? "loading…" : degraded ? "source degraded — may undercount" : sub}
+          {failed
+            ? `unavailable${failure ? ` — ${failure}` : ""}`
+            : pending
+              ? "loading…"
+              : degraded
+                ? "source degraded — may undercount"
+                : sub}
         </div>
       )}
       {children}

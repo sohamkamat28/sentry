@@ -17,18 +17,15 @@
 
 export interface AdvanceBody {
   reason: string;
-  [key: string]: unknown;
 }
 
 export interface ApplyBody {
   control_id: number;
-  [key: string]: unknown;
 }
 
 export interface Audit {
   items: AuditItemsItem[];
-  next_cursor: number;
-  [key: string]: unknown;
+  next_cursor?: number | null;
 }
 
 export interface AuditItemsItem {
@@ -37,10 +34,9 @@ export interface AuditItemsItem {
   vday: number;
   actor: string;
   action: string;
-  target: string;
+  target?: string | null;
   detail: Record<string, unknown>;
   entry_hash: string;
-  [key: string]: unknown;
 }
 
 export interface AuditVerify {
@@ -48,7 +44,6 @@ export interface AuditVerify {
   entries: number;
   broken_at?: number | null;
   reason?: string | null;
-  [key: string]: unknown;
 }
 
 export interface Baseline {
@@ -58,19 +53,16 @@ export interface Baseline {
   growth: BaselineGrowthItem[];
   verdicts_permitted: boolean;
   decommission_permitted: number;
-  [key: string]: unknown;
 }
 
 export interface BaselineConfidence {
   PROVISIONAL: number;
   CONFIRMED: number;
-  [key: string]: unknown;
 }
 
 export interface BaselineEndpointIdSeries {
   endpoint_id: string;
   series: BaselineEndpointIdSeriesSeriesItem[];
-  [key: string]: unknown;
 }
 
 export interface BaselineEndpointIdSeriesSeriesItem {
@@ -78,13 +70,11 @@ export interface BaselineEndpointIdSeriesSeriesItem {
   calls: number;
   errors: number;
   p95_latency_us?: number | null;
-  [key: string]: unknown;
 }
 
 export interface BaselineGrowthItem {
   vday: number;
   n: number;
-  [key: string]: unknown;
 }
 
 export interface Behaviour {
@@ -92,39 +82,25 @@ export interface Behaviour {
   fitted_on: number;
   min_fit_endpoints: number;
   withheld?: string | null;
-  flagged: number;
-  scored: number;
-  patterns: BehaviourPatterns;
+  flagged?: number | null;
+  scored?: number | null;
+  patterns: Record<string, number>;
   excluded_insufficient_history: number;
   items: BehaviourItemsItem[];
-  [key: string]: unknown;
 }
 
 export interface BehaviourItemsItem {
   endpoint_id: string;
   score: number;
-  isolation_depth: number;
-  patterns: unknown[];
-  [key: string]: unknown;
-}
-
-export interface BehaviourPatterns {
-  INSUFFICIENT_HISTORY: number;
-  [key: string]: unknown;
+  isolation_depth?: number | null;
+  patterns: string[];
 }
 
 export interface Classification {
   vday: number;
   matrix: ClassificationMatrixItem[];
-  confidence: ClassificationConfidence;
+  confidence: Record<string, number>;
   shadow_reliable: boolean;
-  [key: string]: unknown;
-}
-
-export interface ClassificationConfidence {
-  PROVISIONAL: number;
-  CONFIRMED: number;
-  [key: string]: unknown;
 }
 
 export interface ClassificationEndpointId {
@@ -134,25 +110,28 @@ export interface ClassificationEndpointId {
   confidence: string;
   severity_bump: boolean;
   pre_zombie: boolean;
-  trace: ClassificationEndpointIdTraceItem[];
+  trace: (ClassificationEndpointIdTraceQuestion | ClassificationEndpointIdTraceRule)[];
   vday: number;
   engine_version: string;
-  [key: string]: unknown;
 }
 
-export interface ClassificationEndpointIdTraceItem {
+export interface ClassificationEndpointIdTraceQuestion {
   q: number;
   question: string;
-  answer: number;
+  answer: number | boolean;
   source: string;
-  [key: string]: unknown;
+}
+
+export interface ClassificationEndpointIdTraceRule {
+  rule: string;
+  applied: string;
+  result: string | boolean;
 }
 
 export interface ClassificationMatrixItem {
   lifecycle: string;
   governance: string;
   n: number;
-  [key: string]: unknown;
 }
 
 export interface Clock {
@@ -161,30 +140,25 @@ export interface Clock {
   paused: boolean;
   epoch_wall: string;
   real_time: boolean;
-  [key: string]: unknown;
 }
 
 export interface ClockPause {
   vday: number;
   paused: boolean;
-  [key: string]: unknown;
 }
 
 export interface ClockResume {
   vday: number;
   paused: boolean;
-  [key: string]: unknown;
 }
 
 export interface ClockSetInput {
   vday: number;
-  [key: string]: unknown;
 }
 
 export interface ClockSetOutput {
   vday: number;
   previous: number;
-  [key: string]: unknown;
 }
 
 export interface Correlation {
@@ -194,44 +168,33 @@ export interface Correlation {
   ownership: CorrelationOwnership;
   shadow_reliable: boolean;
   window_vdays: number;
-  [key: string]: unknown;
 }
 
 export interface CorrelationEndpointIdOwnership {
   endpoint_id: string;
-  owner_email: string;
+  owner_email?: string | null;
   owner_team?: string | null;
   resolved_by: string;
   confidence: number;
   reachable: boolean;
-  escalation: string;
+  escalation?: string | null;
   ladder: CorrelationEndpointIdOwnershipLadderItem[];
-  [key: string]: unknown;
 }
 
 export interface CorrelationEndpointIdOwnershipLadderItem {
   rung: string;
   result: string;
-  [key: string]: unknown;
 }
 
 export interface CorrelationOwnership {
   resolved_by: Record<string, number>;
   unreachable: number;
-  [key: string]: unknown;
 }
 
 export interface Decommission {
   vday: number;
-  by_phase: DecommissionByPhase;
+  by_phase: Record<string, number>;
   items: DecommissionItemsItem[];
-  [key: string]: unknown;
-}
-
-export interface DecommissionByPhase {
-  C: number;
-  RETIRED: number;
-  [key: string]: unknown;
 }
 
 export interface DecommissionEndpointIdAdvance {
@@ -239,7 +202,6 @@ export interface DecommissionEndpointIdAdvance {
   from_phase: string;
   released_by: string;
   note: string;
-  [key: string]: unknown;
 }
 
 export interface DecommissionEndpointIdEnrol {
@@ -247,14 +209,12 @@ export interface DecommissionEndpointIdEnrol {
   phase: string;
   express: boolean;
   canary: boolean;
-  [key: string]: unknown;
 }
 
 export interface DecommissionEndpointIdHold {
   endpoint_id: string;
   hold: boolean;
   reason?: string | null;
-  [key: string]: unknown;
 }
 
 export interface DecommissionEndpointIdWormVerify {
@@ -265,7 +225,6 @@ export interface DecommissionEndpointIdWormVerify {
   verified: boolean;
   delete_refused_with: string;
   detail: string;
-  [key: string]: unknown;
 }
 
 export interface DecommissionItemsItem {
@@ -284,7 +243,6 @@ export interface DecommissionItemsItem {
   worm_object?: string | null;
   worm_retain_until?: string | null;
   certificate_id?: string | null;
-  [key: string]: unknown;
 }
 
 export interface DecommissionItemsItemHiddenCallersItem {
@@ -292,7 +250,6 @@ export interface DecommissionItemsItemHiddenCallersItem {
   ip: string;
   first_vday: number;
   calls: number;
-  [key: string]: unknown;
 }
 
 export interface Discovery {
@@ -300,7 +257,6 @@ export interface Discovery {
   sources: DiscoverySourcesItem[];
   shadow_reliable: boolean;
   shadow_count: number;
-  [key: string]: unknown;
 }
 
 export interface DiscoverySourcesItem {
@@ -309,20 +265,18 @@ export interface DiscoverySourcesItem {
   observations_24v: number;
   exclusive: number;
   healthy: boolean;
-  [key: string]: unknown;
 }
 
 export interface Estate {
   items: EstateItemsItem[];
-  next_cursor?: number | null;
-  [key: string]: unknown;
+  next_cursor?: string | null;
 }
 
 export interface EstateEndpointId {
   id: string;
   method: string;
   path: string;
-  service: EstateEndpointIdService;
+  service?: EstateEndpointIdService | null;
   auth: string;
   tls_version?: string | null;
   rate_limited: boolean;
@@ -332,16 +286,15 @@ export interface EstateEndpointId {
   retired: boolean;
   honeypot_active: boolean;
   first_vday: number;
-  last_call_vday: number;
+  last_call_vday?: number | null;
   total_calls: number;
   sources: string[];
-  classification: EstateEndpointIdClassification;
-  cdri: EstateEndpointIdCdri;
-  anomaly: EstateEndpointIdAnomaly;
-  forecast: EstateEndpointIdForecast;
-  blast: EstateEndpointIdBlast;
-  ownership: EstateEndpointIdOwnership;
-  [key: string]: unknown;
+  classification?: EstateEndpointIdClassification | null;
+  cdri?: EstateEndpointIdCdri | null;
+  anomaly?: EstateEndpointIdAnomaly | null;
+  forecast?: EstateEndpointIdForecast | null;
+  blast?: EstateEndpointIdBlast | null;
+  ownership?: EstateEndpointIdOwnership | null;
 }
 
 export interface EstateEndpointIdAnomaly {
@@ -349,7 +302,6 @@ export interface EstateEndpointIdAnomaly {
   score: number;
   patterns: unknown[];
   features: Record<string, number>;
-  [key: string]: unknown;
 }
 
 export interface EstateEndpointIdBlast {
@@ -360,7 +312,6 @@ export interface EstateEndpointIdBlast {
   in_graph: boolean;
   hop_limit: number;
   affected: EstateEndpointIdBlastAffectedItem[];
-  [key: string]: unknown;
 }
 
 export interface EstateEndpointIdBlastAffectedItem {
@@ -369,7 +320,6 @@ export interface EstateEndpointIdBlastAffectedItem {
   hop: number;
   calls: number;
   criticality: string;
-  [key: string]: unknown;
 }
 
 export interface EstateEndpointIdCdri {
@@ -378,7 +328,6 @@ export interface EstateEndpointIdCdri {
   parts: EstateEndpointIdCdriPartsItem[];
   weights_version: number;
   time_to_breach: EstateEndpointIdCdriTimeToBreach;
-  [key: string]: unknown;
 }
 
 export interface EstateEndpointIdCdriPartsItem {
@@ -387,14 +336,12 @@ export interface EstateEndpointIdCdriPartsItem {
   r: number;
   w: number;
   contribution: number;
-  [key: string]: unknown;
 }
 
 export interface EstateEndpointIdCdriTimeToBreach {
-  days: number;
+  days?: number | null;
   basis: string;
   factors: string[];
-  [key: string]: unknown;
 }
 
 export interface EstateEndpointIdClassification {
@@ -403,16 +350,7 @@ export interface EstateEndpointIdClassification {
   confidence: string;
   pre_zombie: boolean;
   severity_bump: boolean;
-  trace: EstateEndpointIdClassificationTraceItem[];
-  [key: string]: unknown;
-}
-
-export interface EstateEndpointIdClassificationTraceItem {
-  q: number;
-  question: string;
-  answer: number;
-  source: string;
-  [key: string]: unknown;
+  trace: (ClassificationEndpointIdTraceQuestion | ClassificationEndpointIdTraceRule)[];
 }
 
 export interface EstateEndpointIdForecast {
@@ -420,31 +358,27 @@ export interface EstateEndpointIdForecast {
   slope: number;
   signals: Record<string, number>;
   deseasonalised: boolean;
-  [key: string]: unknown;
 }
 
 export interface EstateEndpointIdOwnership {
-  owner_email: string;
+  owner_email?: string | null;
   reachable: boolean;
   confidence: number;
   resolved_by: string;
-  escalation: string;
+  escalation?: string | null;
   ladder: EstateEndpointIdOwnershipLadderItem[];
-  [key: string]: unknown;
 }
 
 export interface EstateEndpointIdOwnershipLadderItem {
   rung: string;
   result: string;
-  [key: string]: unknown;
 }
 
 export interface EstateEndpointIdService {
   id: string;
   name: string;
-  team: string;
+  team?: string | null;
   criticality: string;
-  [key: string]: unknown;
 }
 
 export interface EstateItemsItem {
@@ -452,39 +386,35 @@ export interface EstateItemsItem {
   method: string;
   path: string;
   service: string;
-  team: string;
+  team?: string | null;
   criticality: string;
   auth: string;
   tls_version?: string | null;
   rate_limited: boolean;
   data_classes: string[];
-  last_call_vday: number;
+  last_call_vday?: number | null;
   retired: boolean;
-  lifecycle: string;
-  governance: string;
-  confidence: string;
+  lifecycle?: string | null;
+  governance?: string | null;
+  confidence?: string | null;
   pre_zombie: boolean;
-  cdri: number;
-  tier: string;
-  time_to_breach_d: number;
-  [key: string]: unknown;
+  cdri?: number | null;
+  tier?: string | null;
+  time_to_breach_d?: number | null;
 }
 
 export interface Findings {
   generators: FindingsGenerators;
   items: FindingsItemsItem[];
-  [key: string]: unknown;
 }
 
 export interface FindingsFrameworks {
   frameworks: string[];
   violations: Record<string, unknown>;
-  [key: string]: unknown;
 }
 
 export interface FindingsGenerators {
   template: number;
-  [key: string]: unknown;
 }
 
 export interface FindingsItemsItem {
@@ -496,16 +426,14 @@ export interface FindingsItemsItem {
   model?: string | null;
   narrative: FindingsItemsItemNarrative;
   regulations: FindingsItemsItemRegulationsItem[];
-  time_to_breach_d: number;
+  time_to_breach_d?: number | null;
   vday: number;
-  [key: string]: unknown;
 }
 
 export interface FindingsItemsItemNarrative {
   summary: string;
   technical: string;
   action: string;
-  [key: string]: unknown;
 }
 
 export interface FindingsItemsItemRegulationsItem {
@@ -514,7 +442,6 @@ export interface FindingsItemsItemRegulationsItem {
   requirement: string;
   status: string;
   evidence: string;
-  [key: string]: unknown;
 }
 
 export interface Forecast {
@@ -522,7 +449,6 @@ export interface Forecast {
   active: number;
   flagged_ratio: number;
   items: ForecastItemsItem[];
-  [key: string]: unknown;
 }
 
 export interface ForecastEndpointId {
@@ -535,7 +461,6 @@ export interface ForecastEndpointId {
   observed: number[];
   adjusted: number[];
   projection: number[];
-  [key: string]: unknown;
 }
 
 export interface ForecastItemsItem {
@@ -546,7 +471,6 @@ export interface ForecastItemsItem {
   slope: number;
   signals: Record<string, number>;
   deseasonalised: boolean;
-  [key: string]: unknown;
 }
 
 export interface GateCheck {
@@ -554,18 +478,15 @@ export interface GateCheck {
   pr_number: number;
   commit_sha: string;
   routes: Record<string, unknown>[];
-  [key: string]: unknown;
 }
 
 export interface GateCheckResult {
   passed: boolean;
   checks: Record<string, unknown>[];
-  [key: string]: unknown;
 }
 
 export interface GateEvents {
   events: GateEventsEventsItem[];
-  [key: string]: unknown;
 }
 
 export interface GateEventsEventsItem {
@@ -576,7 +497,6 @@ export interface GateEventsEventsItem {
   passed: boolean;
   checks: GateEventsEventsItemChecksItem[];
   at: string;
-  [key: string]: unknown;
 }
 
 export interface GateEventsEventsItemChecksItem {
@@ -585,23 +505,19 @@ export interface GateEventsEventsItemChecksItem {
   severity: string;
   file: string;
   line: number;
-  [key: string]: unknown;
 }
 
 export interface HTTPValidationError {
   detail?: ValidationError[];
-  [key: string]: unknown;
 }
 
 export interface HardenPreviewBody {
   endpoint_id: string;
-  [key: string]: unknown;
 }
 
 export interface HoldBody {
   reason: string;
   hold?: boolean;
-  [key: string]: unknown;
 }
 
 export interface ImpactEndpointId {
@@ -615,7 +531,6 @@ export interface ImpactEndpointId {
   datastores: unknown[];
   affected: ImpactEndpointIdAffectedItem[];
   retirement_path: ImpactEndpointIdRetirementPath;
-  [key: string]: unknown;
 }
 
 export interface ImpactEndpointIdAffectedItem {
@@ -624,7 +539,6 @@ export interface ImpactEndpointIdAffectedItem {
   hop: number;
   calls: number;
   criticality: string;
-  [key: string]: unknown;
 }
 
 export interface ImpactEndpointIdRetirementPath {
@@ -633,7 +547,6 @@ export interface ImpactEndpointIdRetirementPath {
   phases: string[];
   estimated_vdays: number;
   throttle_exempt: boolean;
-  [key: string]: unknown;
 }
 
 export interface Live {
@@ -644,7 +557,6 @@ export interface Live {
   counters: Record<string, number>;
   health: LiveHealthItem[];
   pipeline: LivePipeline;
-  [key: string]: unknown;
 }
 
 export interface LiveHealthItem {
@@ -652,7 +564,6 @@ export interface LiveHealthItem {
   state: string;
   last_vday?: number | null;
   vdays_behind?: number | null;
-  [key: string]: unknown;
 }
 
 export interface LivePipeline {
@@ -663,17 +574,15 @@ export interface LivePipeline {
   running: boolean;
   stages_done: number;
   stages_total: number;
-  [key: string]: unknown;
 }
 
 export interface Operations {
   vday: number;
   scan_interval_vhours: number;
   scheduler_enabled: boolean;
-  siem: OperationsSiem;
+  siem: OperationsSummarySiem;
   stages: Record<string, unknown>;
   gate_events: OperationsGateEventsItem[];
-  [key: string]: unknown;
 }
 
 export interface OperationsGateEventsItem {
@@ -683,7 +592,6 @@ export interface OperationsGateEventsItem {
   passed: boolean;
   checks: OperationsGateEventsItemChecksItem[];
   at: string;
-  [key: string]: unknown;
 }
 
 export interface OperationsGateEventsItemChecksItem {
@@ -692,12 +600,10 @@ export interface OperationsGateEventsItemChecksItem {
   severity: string;
   file: string;
   line: number;
-  [key: string]: unknown;
 }
 
 export interface OperationsLeaderboard {
   teams: OperationsLeaderboardTeamsItem[];
-  [key: string]: unknown;
 }
 
 export interface OperationsLeaderboardTeamsItem {
@@ -711,13 +617,11 @@ export interface OperationsLeaderboardTeamsItem {
   pre_zombie: number;
   critical_score: number;
   ownership_confidence: number;
-  [key: string]: unknown;
 }
 
 export interface OperationsScan {
   run_id: number;
   stages: OperationsScanStagesItem[];
-  [key: string]: unknown;
 }
 
 export interface OperationsScanStagesItem {
@@ -726,7 +630,6 @@ export interface OperationsScanStagesItem {
   duration_ms: number;
   error?: string | null;
   skipped?: string | null;
-  [key: string]: unknown;
 }
 
 export interface OperationsSiem {
@@ -739,47 +642,47 @@ export interface OperationsSiem {
   dropped: number;
   failures: number;
   recent: unknown[];
-  [key: string]: unknown;
+}
+
+export interface OperationsSummarySiem {
+  host: string;
+  format: string;
+  configured: boolean;
 }
 
 export interface Pipeline {
   vday: number;
-  run: PipelineRun;
+  run?: PipelineRun | null;
   stages: PipelineStagesItem[];
   order: number[];
-  [key: string]: unknown;
 }
 
 export interface PipelineRun {
   id: number;
   trigger: string;
   started_at: string;
-  finished_at: string;
-  ok: boolean;
-  [key: string]: unknown;
+  finished_at?: string | null;
+  ok?: boolean | null;
 }
 
 export interface PipelineStagesItem {
   stage: number;
   name: string;
   depends_on: unknown[];
-  ok: boolean;
+  ok?: boolean | null;
   records: number;
   duration_ms: number;
   error?: string | null;
-  [key: string]: unknown;
 }
 
 export interface PolicySettings {
   settings: PolicySettingsSettings;
   warnings: unknown[];
-  [key: string]: unknown;
 }
 
 export interface PolicySettingsKey {
   key: string;
   value?: unknown;
-  [key: string]: unknown;
 }
 
 export interface PolicySettingsSettings {
@@ -791,38 +694,31 @@ export interface PolicySettingsSettings {
   express_sunset_vdays: PolicySettingsSettingsExpressSunsetVdays;
   anomaly_contamination: PolicySettingsSettingsAnomalyContamination;
   honeypot_legal_signoff: PolicySettingsSettingsHoneypotLegalSignoff;
-  [key: string]: unknown;
 }
 
 export interface PolicySettingsSettingsAnomalyContamination {
   value: number;
-  [key: string]: unknown;
 }
 
 export interface PolicySettingsSettingsBlastHopLimit {
   value: number;
-  [key: string]: unknown;
 }
 
 export interface PolicySettingsSettingsExpressSunsetVdays {
   value: number;
-  [key: string]: unknown;
 }
 
 export interface PolicySettingsSettingsHoneypotLegalSignoff {
   reference: string;
   signed: boolean;
-  [key: string]: unknown;
 }
 
 export interface PolicySettingsSettingsResurrectionThreshold {
   value: number;
-  [key: string]: unknown;
 }
 
 export interface PolicySettingsSettingsScanIntervalVhours {
   value: number;
-  [key: string]: unknown;
 }
 
 export interface PolicyWeights {
@@ -831,7 +727,6 @@ export interface PolicyWeights {
   sum: number;
   defaults: Record<string, number>;
   history: PolicyWeightsHistoryItem[];
-  [key: string]: unknown;
 }
 
 export interface PolicyWeightsHistoryItem {
@@ -840,32 +735,27 @@ export interface PolicyWeightsHistoryItem {
   note: string;
   created_by: string;
   created_at: string;
-  [key: string]: unknown;
 }
 
 export interface PolicyWeightsReset {
   version: number;
   weights: Record<string, number>;
-  [key: string]: unknown;
 }
 
 export interface Remediation {
   items: RemediationItemsItem[];
-  [key: string]: unknown;
 }
 
 export interface RemediationControlControlIdRevert {
   control_id: number;
   state: string;
   also_reverted?: number[];
-  [key: string]: unknown;
 }
 
 export interface RemediationEndpointId {
   endpoint_id: string;
   controls: RemediationEndpointIdControlsItem[];
-  change_request: RemediationEndpointIdChangeRequest;
-  [key: string]: unknown;
+  change_request?: RemediationEndpointIdChangeRequest | null;
 }
 
 export interface RemediationEndpointIdApply {
@@ -873,7 +763,6 @@ export interface RemediationEndpointIdApply {
   state: string;
   kong_plugin_id?: string | null;
   superseded_control_id?: number | null;
-  [key: string]: unknown;
 }
 
 export interface RemediationEndpointIdChangeRequest {
@@ -881,7 +770,6 @@ export interface RemediationEndpointIdChangeRequest {
   state: string;
   sys_id?: string | null;
   stub: boolean;
-  [key: string]: unknown;
 }
 
 export interface RemediationEndpointIdControlsItem {
@@ -889,25 +777,12 @@ export interface RemediationEndpointIdControlsItem {
   kind: string;
   state: string;
   generator: string;
-  plugin_config: RemediationEndpointIdControlsItemPluginConfig;
-  kong_plugin_id: string;
+  plugin_config: Record<string, unknown>;
+  kong_plugin_id?: string | null;
   origin_stage: number;
   error?: string | null;
-  actor: string;
+  actor?: string | null;
   judge?: Record<string, unknown> | null;
-  [key: string]: unknown;
-}
-
-export interface RemediationEndpointIdControlsItemPluginConfig {
-  name: string;
-  config: RemediationEndpointIdControlsItemPluginConfigConfig;
-  [key: string]: unknown;
-}
-
-export interface RemediationEndpointIdControlsItemPluginConfigConfig {
-  status_code: number;
-  message: string;
-  [key: string]: unknown;
 }
 
 export interface RemediationItemsItem {
@@ -916,15 +791,21 @@ export interface RemediationItemsItem {
   path: string;
   score: number;
   tier: string;
-  time_to_breach_d: number;
-  controls: unknown[];
+  time_to_breach_d?: number | null;
+  controls: RemediationItemsItemControlsItem[];
   applied: number;
-  [key: string]: unknown;
+}
+
+export interface RemediationItemsItemControlsItem {
+  id: number;
+  kind: string;
+  state: string;
+  generator: string;
+  kong_plugin_id?: string | null;
 }
 
 export interface Risk {
   items: RiskItemsItem[];
-  [key: string]: unknown;
 }
 
 export interface RiskItemsItem {
@@ -936,7 +817,6 @@ export interface RiskItemsItem {
   parts: RiskItemsItemPartsItem[];
   weights_version: number;
   time_to_breach: RiskItemsItemTimeToBreach;
-  [key: string]: unknown;
 }
 
 export interface RiskItemsItemPartsItem {
@@ -945,19 +825,16 @@ export interface RiskItemsItemPartsItem {
   r: number;
   w: number;
   contribution: number;
-  [key: string]: unknown;
 }
 
 export interface RiskItemsItemTimeToBreach {
-  days: number;
+  days?: number | null;
   basis: string;
   factors: string[];
-  [key: string]: unknown;
 }
 
 export interface SettingUpdate {
   value: Record<string, unknown>;
-  [key: string]: unknown;
 }
 
 export interface System {
@@ -969,13 +846,11 @@ export interface System {
   governance: Record<string, number>;
   tiers: SystemTiers;
   mean_cdri: number;
-  [key: string]: unknown;
 }
 
 export interface SystemTiers {
   HIGH: number;
   CRITICAL: number;
-  [key: string]: unknown;
 }
 
 export interface Threat {
@@ -987,7 +862,6 @@ export interface Threat {
   legal_signoff: ThreatLegalSignoff;
   probes: ThreatProbesItem[];
   alerts: ThreatAlertsItem[];
-  [key: string]: unknown;
 }
 
 export interface ThreatAlertsItem {
@@ -997,7 +871,6 @@ export interface ThreatAlertsItem {
   threshold: number;
   lsh_hit: boolean;
   vday: number;
-  [key: string]: unknown;
 }
 
 export interface ThreatFingerprintEndpointId {
@@ -1008,7 +881,6 @@ export interface ThreatFingerprintEndpointId {
   features: ThreatFingerprintEndpointIdFeatures;
   shingles: string[];
   shingle_count: number;
-  [key: string]: unknown;
 }
 
 export interface ThreatFingerprintEndpointIdFeatures {
@@ -1023,19 +895,16 @@ export interface ThreatFingerprintEndpointIdFeatures {
   resp_size_band: string;
   observations: number;
   has_schema: boolean;
-  [key: string]: unknown;
 }
 
 export interface ThreatLegalSignoff {
-  reference: string;
+  reference?: string | null;
   signed: boolean;
-  [key: string]: unknown;
 }
 
 export interface ThreatProbes {
   count: number;
   probes: ThreatProbesProbesItem[];
-  [key: string]: unknown;
 }
 
 export interface ThreatProbesItem {
@@ -1046,7 +915,6 @@ export interface ThreatProbesItem {
   source_ip: string;
   source_asn?: string | null;
   watermark: string;
-  [key: string]: unknown;
 }
 
 export interface ThreatProbesProbesItem {
@@ -1063,7 +931,6 @@ export interface ThreatProbesProbesItem {
   watermark: string;
   session_fp: string;
   body_sha256?: string | null;
-  [key: string]: unknown;
 }
 
 export interface ThreatProbesProbesItemHeaders {
@@ -1078,20 +945,17 @@ export interface ThreatProbesProbesItemHeaders {
   "X-Forwarded-Proto"?: string;
   "X-Kong-Request-Id"?: string;
   "X-Real-Ip"?: string;
-  [key: string]: unknown;
 }
 
 export interface ThreatRescan {
   vday: number;
   alerts_raised: number;
-  [key: string]: unknown;
 }
 
 export interface ThreatResurrectionScan {
   fingerprints: number;
   threshold: number;
   alerts: ThreatResurrectionScanAlertsItem[];
-  [key: string]: unknown;
 }
 
 export interface ThreatResurrectionScanAlertsItem {
@@ -1104,27 +968,23 @@ export interface ThreatResurrectionScanAlertsItem {
   lsh_hit: boolean;
   vday: number;
   created_at: string;
-  [key: string]: unknown;
 }
 
 export interface ValidationError {
-  loc: string | number[];
+  loc: (string | number)[];
   msg: string;
   type: string;
-  [key: string]: unknown;
 }
 
 export interface WeightsUpdate {
   weights: Record<string, number>;
   note?: string | null;
-  [key: string]: unknown;
 }
 
 export interface Zerotrust {
-  distribution: Record<string, unknown>;
+  distribution: Record<string, number>;
   gaps: Record<string, number>;
   items: ZerotrustItemsItem[];
-  [key: string]: unknown;
 }
 
 export interface ZerotrustEndpointId {
@@ -1135,16 +995,14 @@ export interface ZerotrustEndpointId {
   controls: ZerotrustEndpointIdControlsItem[];
   method: string;
   path: string;
-  [key: string]: unknown;
 }
 
 export interface ZerotrustEndpointIdControlsItem {
   key: string;
   ok: boolean;
-  current: string;
-  remedy: string;
+  current?: string | null;
+  remedy?: string | null;
   requires_migration: boolean;
-  [key: string]: unknown;
 }
 
 export interface ZerotrustEndpointIdHarden {
@@ -1153,7 +1011,6 @@ export interface ZerotrustEndpointIdHarden {
   would_apply?: Record<string, unknown>[] | null;
   controls?: Record<string, unknown>[] | null;
   blocked?: string | null;
-  [key: string]: unknown;
 }
 
 export interface ZerotrustHardenPreview {
@@ -1162,7 +1019,6 @@ export interface ZerotrustHardenPreview {
   would_apply?: Record<string, unknown>[] | null;
   controls?: Record<string, unknown>[] | null;
   blocked?: string | null;
-  [key: string]: unknown;
 }
 
 export interface ZerotrustItemsItem {
@@ -1173,16 +1029,14 @@ export interface ZerotrustItemsItem {
   of: number;
   priority: number;
   controls: ZerotrustItemsItemControlsItem[];
-  [key: string]: unknown;
 }
 
 export interface ZerotrustItemsItemControlsItem {
   key: string;
   ok: boolean;
-  current: string;
-  remedy: string;
+  current?: string | null;
+  remedy?: string | null;
   requires_migration: boolean;
-  [key: string]: unknown;
 }
 
 export interface ApiRoutes {

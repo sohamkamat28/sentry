@@ -5,7 +5,7 @@ import { post, ApiError } from "../lib/api";
 import { Metric } from "../components/data/Metric";
 import { Table } from "../components/data/Table";
 import { score, vday, when } from "../lib/format";
-import type { Threat as T } from "../lib/types";
+import type { Threat as T } from "../lib/api-types";
 
 /**
  * Honeypots, probes, and resurrection alerts.
@@ -31,39 +31,44 @@ export function Threat() {
       <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
         <Metric
           label="Honeypots"
-          value={isLoading ? undefined : data?.honeypots_active}
+          value={isLoading || error ? undefined : data?.honeypots_active}
           tone={data?.honeypots_active ? "warn" : "dim"}
           loading={isLoading}
+          error={error}
         />
         <Metric
           label="Fingerprints"
-          value={isLoading ? undefined : data?.fingerprints}
+          value={isLoading || error ? undefined : data?.fingerprints}
           loading={isLoading}
+          error={error}
           sub={`threshold ${data?.threshold ?? "—"}`}
         />
         <Metric
           label="Alerts"
-          value={isLoading || rescan.isPending ? undefined : data?.alerts.length}
+          value={isLoading || rescan.isPending || error ? undefined : data?.alerts.length}
           tone={data?.alerts.length ? "crit" : "ok"}
           loading={isLoading || rescan.isPending}
+          error={error}
         />
         <Metric
           label="Probes"
-          value={isLoading ? undefined : data?.probes_total}
+          value={isLoading || error ? undefined : data?.probes_total}
           loading={isLoading}
+          error={error}
           sub={`${data?.unique_sources ?? "—"} sources`}
         />
         <Metric
           label="Legal sign-off"
-          value={isLoading ? undefined : signed ? "signed" : "absent"}
+          value={isLoading || error ? undefined : signed ? "signed" : "absent"}
           tone={signed ? "ok" : "warn"}
           loading={isLoading}
+          error={error}
           sub={data?.legal_signoff?.reference ?? undefined}
         />
       </div>
 
       <div>
-        <button className="btn" disabled={rescan.isPending} onClick={() => rescan.mutate()}>
+        <button className="btn" type="button" disabled={rescan.isPending} onClick={() => rescan.mutate()}>
           {rescan.isPending ? "scanning…" : "rescan"}
         </button>
         {failure && (

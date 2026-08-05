@@ -1,9 +1,11 @@
+import { useEffect } from "react";
+
 import { Nav } from "./components/shell/Nav";
 import { LiveBar } from "./components/shell/LiveBar";
 import { HealthStrip } from "./components/shell/HealthStrip";
 import { CommandPalette } from "./components/shell/CommandPalette";
 import { useRoute, routePath } from "./lib/router";
-import { SURFACES } from "./routes";
+import { areaForPath, SURFACES } from "./routes";
 
 /**
  * The shell.
@@ -20,27 +22,57 @@ import { SURFACES } from "./routes";
 export function App() {
   const [path] = useRoute();
   const surface = SURFACES.find((s) => s.path === routePath(path));
+  const area = areaForPath(routePath(path));
   const View = surface?.view;
   const fullBleed = surface?.path === "/";
 
+  useEffect(() => {
+    document.title = surface ? `${surface.label} · SENTRY` : "SENTRY";
+  }, [surface]);
+
   return (
-    <div className="flex h-screen">
+    <div className="flex min-h-dvh flex-col md:h-dvh md:flex-row">
+      <a
+        href="#main-content"
+        className="fixed left-3 top-3 z-50 -translate-y-20 rounded-sm bg-info px-3 py-2 font-sans text-[12px] font-semibold text-bg transition-transform focus:translate-y-0"
+      >
+        Skip to content
+      </a>
       <Nav path={path} />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <LiveBar />
         <HealthStrip />
-        <main className={`min-h-0 flex-1 ${fullBleed ? "overflow-hidden p-3" : "overflow-y-auto p-4"}`}>
+        <main id="main-content" tabIndex={-1} className={`min-h-0 flex-1 ${fullBleed ? "overflow-y-auto p-2 md:overflow-hidden md:p-3" : "overflow-y-auto p-3 md:p-5"}`}>
           {View ? (
             fullBleed ? (
-              <View />
+              <>
+                <h1 className="sr-only">{surface.label}</h1>
+                <View />
+              </>
             ) : (
               <>
-                <h1 className="mb-3 text-[15px] tracking-wide text-tx2">{surface!.label}</h1>
+                <header className="mb-5 font-sans">
+                  <div className="mb-1 text-[10.5px] font-medium uppercase tracking-[0.12em] text-info">
+                    {area?.label}
+                  </div>
+                  <h1 className="text-[21px] font-semibold leading-tight tracking-[-0.02em] text-tx1">
+                    {surface.label}
+                  </h1>
+                  <p className="mt-1 max-w-[65ch] text-[12px] leading-5 text-tx3">
+                    {surface.description}
+                  </p>
+                </header>
                 <View />
               </>
             )
           ) : (
-            <div className="text-tx4">no surface at {routePath(path)}</div>
+            <div className="panel max-w-lg p-5 font-sans">
+              <h1 className="text-[18px] font-semibold text-tx1">View not found</h1>
+              <p className="mt-1 text-[12px] text-tx3">There is no console view at {routePath(path)}.</p>
+              <a className="mt-4 inline-block text-[12px] text-info hover:underline" href="#/">
+                Return to the work queue
+              </a>
+            </div>
           )}
         </main>
       </div>

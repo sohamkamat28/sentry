@@ -1,22 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 
 import { SLOW_MS, useLive } from "../lib/useLive";
-import { get } from "../lib/api";
-import type { AuditVerify as Verify } from "../lib/api-types";
+import type {
+  Audit as AuditResponse,
+  AuditItemsItem as Entry,
+  AuditVerify as Verify,
+} from "../lib/api-types";
 import { Metric } from "../components/data/Metric";
 import { Table } from "../components/data/Table";
+import { Drawer, Field, Section } from "../components/data/Drawer";
 import { num, shortId, vday, when } from "../lib/format";
-
-interface Entry {
-  seq: number;
-  wall_ts: string;
-  vday: number;
-  actor: string;
-  action: string;
-  target: string | null;
-  detail: Record<string, unknown>;
-  entry_hash?: string;
-}
 
 /**
  * The hash-chained ledger, and its verification.
@@ -26,20 +19,19 @@ interface Entry {
  * is in the check having been run.
  */
 export function Audit() {
-  const entries = useLive<{ items: Entry[] }>("audit", "/audit?limit=200", SLOW_MS);
-  const verify = useQuery({
-    queryKey: ["audit", "verify"],
-    queryFn: () => get<Verify>("/audit/verify"),
-  });
+  const [open, setOpen] = useState<Entry | null>(null);
+  const entries = useLive<AuditResponse>("audit", "/audit?limit=200", SLOW_MS);
+  const verify = useLive<Verify>("audit-verify", "/audit/verify", SLOW_MS);
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
         <Metric
           label="Chain"
-          value={verify.isLoading ? undefined : verify.data?.ok ? "intact" : "broken"}
-          tone={verify.data?.ok ? "ok" : "crit"}
+          value={verify.isLoading || verify.error ? undefined : verify.data?.ok ? "intact" : "broken"}
+          tone={verify.error ? "dim" : verify.data?.ok ? "ok" : "crit"}
           loading={verify.isLoading}
+          error={verify.error}
           sub={
             verify.data?.ok
               ? undefined
@@ -52,11 +44,13 @@ export function Audit() {
           label="Entries verified"
           value={verify.isLoading ? undefined : verify.data?.entries}
           loading={verify.isLoading}
+          error={verify.error}
         />
         <Metric
           label="Shown"
-          value={entries.isLoading ? undefined : entries.data?.items.length}
+          value={entries.isLoading || entries.error ? undefined : entries.data?.items.length}
           loading={entries.isLoading}
+          error={entries.error}
           sub="most recent first"
         />
       </div>
@@ -79,7 +73,37 @@ export function Audit() {
         rowKey={(e) => String(e.seq)}
         loading={entries.isLoading}
         error={entries.error as Error | null}
+        onRowClick={setOpen}
+        rowLabel={(entry) => `audit entry ${entry.seq}: ${entry.action}`}
       />
+
+      <Drawer
+        open={open !== null}
+        onClose={() => setOpen(null)}
+        title={open ? `Audit entry ${open.seq}` : "Audit entry"}
+        subtitle={open?.action}
+      >
+        {open ? (
+          <div>
+            <Section title="event">
+              <Field label="timestamp" value={when(open.wall_ts)} />
+              <Field label="virtual day" value={vday(open.vday)} />
+              <Field label="actor" value={open.actor} />
+              <Field label="target" value={open.target ?? "—"} />
+              <Field label="entry hash" value={<span className="break-all num">{open.entry_hash}</span>} />
+            </Section>
+            <Section title="detail">
+              {Object.keys(open.detail).length === 0 ? (
+                <p className="text-[12px] text-tx4">no additional detail</p>
+              ) : (
+                <pre className="overflow-x-auto whitespace-pre-wrap break-words text-[11px] text-tx2">
+                  {JSON.stringify(open.detail, null, 2)}
+                </pre>
+              )}
+            </Section>
+          </div>
+        ) : null}
+      </Drawer>
     </div>
   );
 }

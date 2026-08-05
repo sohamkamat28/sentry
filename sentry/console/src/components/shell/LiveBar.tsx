@@ -1,6 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { DEV_TOKENS, getToken, setToken } from "../../lib/api";
+import {
+  DEV_TOKENS,
+  getDevToken,
+  logout,
+  OIDC_ENABLED,
+  setDevToken,
+  useAuth,
+} from "../../lib/auth";
 import { num, score, vday } from "../../lib/format";
 import { LIVE_MS, freshness, togglePaused, useLive, usePaused } from "../../lib/useLive";
 import type { Live, System } from "../../lib/api-types";
@@ -20,6 +27,7 @@ import type { Live, System } from "../../lib/api-types";
  */
 export function LiveBar() {
   const paused = usePaused();
+  const auth = useAuth();
   const live = useLive<Live>("live", "/live", LIVE_MS);
   const system = useLive<System>("system", "/system", 10_000);
 
@@ -31,7 +39,7 @@ export function LiveBar() {
   const blind = live.data?.source === "unavailable";
 
   return (
-    <div className="flex items-center gap-4 border-b border-line bg-panel px-3 py-1.5 text-[11.5px]">
+    <div className="flex shrink-0 items-center gap-4 overflow-x-auto border-b border-line bg-panel px-3 py-1.5 text-[11.5px]">
       <Item label="vday" value={vday(live.data?.vday ?? system.data?.vday)} />
       <Item label="endpoints" value={num(system.data?.endpoints)} />
       <Item
@@ -69,6 +77,7 @@ export function LiveBar() {
 
         <button
           className={`chip ${paused ? "border-warn text-warn" : "text-tx3"}`}
+          type="button"
           onClick={togglePaused}
           title={
             paused
@@ -83,23 +92,34 @@ export function LiveBar() {
           {fresh.label}
         </span>
 
-        <span className="flex items-center gap-1.5">
-          <span className="text-tx4">role</span>
-          <select
-            className="border border-line bg-bg px-1.5 py-0.5 text-[11.5px]"
-            value={getToken()}
-            onChange={(e) => {
-              setToken(e.target.value);
-              window.location.reload();
-            }}
-          >
-            {DEV_TOKENS.map((t) => (
-              <option key={t} value={t}>
-                {t.replace("dev-", "")}
-              </option>
-            ))}
-          </select>
-        </span>
+        {OIDC_ENABLED ? (
+          <span className="flex shrink-0 items-center gap-1.5">
+            <span className="text-tx4">identity</span>
+            <span className="text-tx2" title={auth.roles.join(", ")}>
+              {auth.subject ?? "operator"}
+            </span>
+            <button className="chip text-tx3" type="button" onClick={logout}>logout</button>
+          </span>
+        ) : (
+          <span className="flex shrink-0 items-center gap-1.5">
+            <span className="text-tx4">role</span>
+            <select
+              aria-label="development role"
+              className="border border-line bg-bg px-1.5 py-0.5 text-[11.5px]"
+              value={getDevToken()}
+              onChange={(e) => {
+                setDevToken(e.target.value);
+                window.location.reload();
+              }}
+            >
+              {DEV_TOKENS.map((t) => (
+                <option key={t} value={t}>
+                  {t.replace("dev-", "")}
+                </option>
+              ))}
+            </select>
+          </span>
+        )}
       </span>
     </div>
   );
@@ -114,20 +134,18 @@ export function LiveBar() {
  */
 function useCaptureRate(total: number | undefined, updatedAt: number | undefined) {
   const [rate, setRate] = useState<number | null>(null);
-  const [prev, setPrev] = useState<{ total: number; at: number } | null>(null);
+  const previous = useRef<{ total: number; at: number } | null>(null);
 
   useEffect(() => {
     if (total === undefined || !updatedAt) return;
+    const prev = previous.current;
     if (prev && updatedAt !== prev.at) {
       const dt = (updatedAt - prev.at) / 1000;
       const dv = total - prev.total;
       if (dt > 0 && dv >= 0) setRate(dv / dt);
       else if (dv < 0) setRate(null); // counter rolled at a vday boundary
     }
-    if (!prev || updatedAt !== prev.at) setPrev({ total, at: updatedAt });
-    // `prev` is deliberately excluded: including it re-runs the effect on the
-    // state it just set and spins.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!prev || updatedAt !== prev.at) previous.current = { total, at: updatedAt };
   }, [total, updatedAt]);
 
   return rate;

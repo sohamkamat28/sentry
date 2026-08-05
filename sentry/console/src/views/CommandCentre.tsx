@@ -1,12 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
-
 import { SLOW_MS, useLive } from "../lib/useLive";
-import { get } from "../lib/api";
 import { Metric } from "../components/data/Metric";
 import { Table, type Column } from "../components/data/Table";
 import { navigate } from "../lib/router";
 import { num, score, tierClass, lifecycleClass, governanceClass } from "../lib/format";
-import type { EstateItem, Risk, Classification, Discovery } from "../lib/types";
+import type {
+  Classification,
+  Discovery,
+  Estate,
+  EstateItemsItem,
+  Risk,
+} from "../lib/api-types";
 
 const LIFECYCLES = ["ACTIVE", "DEPRECATED", "DORMANT", "ZOMBIE"];
 const GOVERNANCE = ["OWNED", "ORPHANED", "SHADOW"];
@@ -16,17 +19,14 @@ export function CommandCentre() {
   const risk = useLive<Risk>("risk", "/risk?limit=200", SLOW_MS);
   const cls = useLive<Classification>("classification", "/classification", SLOW_MS);
   const disc = useLive<Discovery>("discovery", "/discovery", SLOW_MS);
-  const estate = useQuery({
-    queryKey: ["estate", "all"],
-    queryFn: () => get<{ items: EstateItem[] }>("/estate?limit=500"),
-  });
+  const estate = useLive<Estate>("estate", "/estate?limit=500", SLOW_MS);
 
   const items = estate.data?.items ?? [];
   const cell = (lc: string, gov: string) =>
     cls.data?.matrix?.find((m) => m.lifecycle === lc && m.governance === gov)?.n ?? 0;
 
-  const count = (pred: (e: EstateItem) => boolean) =>
-    estate.isLoading ? undefined : items.filter(pred).length;
+  const count = (pred: (e: EstateItemsItem) => boolean) =>
+    estate.isLoading || estate.error ? undefined : items.filter(pred).length;
 
   // The only ranked list that matters: CRITICAL with no control applied,
   // soonest breach first.
@@ -84,9 +84,10 @@ export function CommandCentre() {
       <div className="grid grid-cols-2 gap-2 md:grid-cols-6">
         <Metric
           label="Critical"
-          value={risk.isLoading ? undefined : queue.length}
+          value={risk.isLoading || risk.error ? undefined : queue.length}
           tone={queue.length ? "crit" : "ok"}
           loading={risk.isLoading}
+          error={risk.error}
           sub="ranked below"
         />
         <Metric
@@ -94,12 +95,14 @@ export function CommandCentre() {
           value={count((e) => e.lifecycle === "ZOMBIE")}
           tone={count((e) => e.lifecycle === "ZOMBIE") ? "crit" : "ok"}
           loading={estate.isLoading}
+          error={estate.error}
         />
         <Metric
           label="Shadow"
-          value={disc.isLoading ? undefined : disc.data?.shadow_count}
+          value={disc.isLoading || disc.error ? undefined : disc.data?.shadow_count}
           tone={disc.data?.shadow_count ? "warn" : "ok"}
           loading={disc.isLoading}
+          error={disc.error}
           degraded={degraded}
           sub={degraded ? undefined : "gateway compared"}
         />
@@ -108,18 +111,21 @@ export function CommandCentre() {
           value={count((e) => e.governance === "ORPHANED")}
           tone="warn"
           loading={estate.isLoading}
+          error={estate.error}
         />
         <Metric
           label="Retired"
           value={count((e) => e.retired)}
           tone="dim"
           loading={estate.isLoading}
+          error={estate.error}
         />
         <Metric
           label="Confirmed"
-          value={cls.isLoading ? undefined : cls.data?.confidence?.CONFIRMED}
+          value={cls.isLoading || cls.error ? undefined : cls.data?.confidence?.CONFIRMED}
           tone="dim"
           loading={cls.isLoading}
+          error={cls.error}
           sub="90 vdays observed"
         />
       </div>
@@ -134,6 +140,7 @@ export function CommandCentre() {
           error={risk.error as Error | null}
           empty="nothing scored critical"
           onRowClick={(r) => navigate(`/remediation?endpoint=${r.endpoint_id}`)}
+          rowLabel={(r) => `Open remediation for ${r.method} ${r.path}`}
         />
       </section>
 
@@ -158,12 +165,15 @@ export function CommandCentre() {
                 <tr key={lc}>
                   <td className={`cell ${lifecycleClass(lc)}`}>{lc}</td>
                   {GOVERNANCE.map((g) => (
-                    <td
-                      key={g}
-                      className="cell num cursor-pointer text-right hover:bg-line/40"
-                      onClick={() => navigate(`/estate?lifecycle=${lc}&governance=${g}`)}
-                    >
-                      {cls.isLoading ? "—" : num(cell(lc, g))}
+                    <td key={g} className="cell num p-0 text-right">
+                      <button
+                        className="w-full px-3 py-1.5 text-right hover:bg-line/40 disabled:cursor-not-allowed"
+                        type="button"
+                        disabled={Boolean(cls.error)}
+                        onClick={() => navigate(`/estate?lifecycle=${lc}&governance=${g}`)}
+                      >
+                        {cls.isLoading || cls.error ? "—" : num(cell(lc, g))}
+                      </button>
                     </td>
                   ))}
                 </tr>

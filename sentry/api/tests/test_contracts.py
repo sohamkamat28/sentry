@@ -18,6 +18,7 @@ os.environ.setdefault("REDIS_URL", "")
 from fastapi.testclient import TestClient  # noqa: E402
 
 from app.main import app  # noqa: E402
+from app import contracts  # noqa: E402
 from sentry_core.db import create_all  # noqa: E402
 
 ADMIN = {"Authorization": "Bearer dev-admin"}
@@ -44,18 +45,19 @@ def test_every_operation_declares_a_response_schema():
         f"console types for them are `unknown`: {untyped[:5]}")
 
 
-def test_no_route_uses_response_model():
-    """`response_model` filters. Every route must use the documenting form.
+def test_no_route_uses_a_field_filtering_response_model():
+    """A field-declaring `response_model` filters. Contracts must document only.
 
-    This is not style. A model that omits a field the handler returns makes that
-    field vanish from the response, and nothing raises — the console just stops
-    showing it.
+    FastAPI infers ``response_model=dict`` from the handlers' existing ``->
+    dict`` annotations. That checks only that the payload is a mapping and
+    preserves arbitrary keys. A Pydantic response model would instead remove
+    undeclared fields, so no API route may use one here.
     """
     offenders = [
         f"{m} {r.path}"
         for r in app.routes
         for m in getattr(r, "methods", [])
-        if getattr(r, "response_model", None) is not None
+        if getattr(r, "response_model", None) not in (None, dict)
         and str(r.path).startswith("/api/")
     ]
     assert not offenders, (
@@ -82,3 +84,33 @@ def test_an_undeclared_field_still_reaches_the_client():
     assert set(body) >= declared, (
         f"the response is missing declared keys {declared - set(body)} — the "
         f"contract is describing something the handler does not return")
+
+
+def test_classification_trace_contract_covers_questions_and_rules():
+    body = {
+        "endpoint_id": "ep_1", "lifecycle": "ACTIVE", "governance": "OWNED",
+        "confidence": "CONFIRMED", "severity_bump": False, "pre_zombie": False,
+        "vday": 90, "engine_version": "test",
+        "trace": [
+            {"q": 2, "question": "registered in gateway", "answer": True,
+             "source": "endpoint_source"},
+            {"rule": "lifecycle", "applied": "silent < 30", "result": "ACTIVE"},
+            {"rule": "severity", "applied": "owner reachable", "result": False},
+        ],
+    }
+    parsed = contracts.ClassificationEndpointId.model_validate(body)
+    assert len(parsed.trace) == 3
+
+
+def test_estate_detail_contract_allows_not_yet_derived_stages():
+    body = {
+        "id": "ep_1", "method": "GET", "path": "/orders", "service": None,
+        "auth": "NONE", "tls_version": None, "rate_limited": False,
+        "data_classes": [], "deprecated": False, "internet_reachable": False,
+        "retired": False, "honeypot_active": False, "first_vday": 1,
+        "last_call_vday": None, "total_calls": 0, "sources": [],
+        "classification": None, "cdri": None, "anomaly": None,
+        "forecast": None, "blast": None, "ownership": None,
+    }
+    parsed = contracts.EstateEndpointId.model_validate(body)
+    assert parsed.classification is None

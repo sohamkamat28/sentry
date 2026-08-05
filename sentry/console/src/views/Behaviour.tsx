@@ -3,7 +3,7 @@ import { SLOW_MS, useLive } from "../lib/useLive";
 import { Metric } from "../components/data/Metric";
 import { Table } from "../components/data/Table";
 import { num, score } from "../lib/format";
-import type { Behaviour as B } from "../lib/types";
+import type { Behaviour as B } from "../lib/api-types";
 
 /**
  * Anomaly scores, and the endpoints the model refused to score.
@@ -30,22 +30,25 @@ export function Behaviour() {
             none found". */}
         <Metric
           label="Flagged"
-          value={isLoading ? undefined : data?.flagged}
+          value={isLoading || error ? undefined : data?.flagged}
           tone={data?.flagged ? "warn" : "ok"}
           loading={isLoading}
+          error={error}
         />
-        <Metric label="Scored" value={isLoading ? undefined : data?.scored} loading={isLoading} />
+        <Metric label="Scored" value={isLoading || error ? undefined : data?.scored} loading={isLoading} error={error} />
         <Metric
           label="Fitted on"
-          value={isLoading ? undefined : data?.fitted_on}
+          value={isLoading || error ? undefined : data?.fitted_on}
           tone={data?.fitted ? "ok" : "warn"}
           loading={isLoading}
+          error={error}
           sub={`needs ${data?.min_fit_endpoints ?? "—"}`}
         />
         <Metric
           label="Patterns"
-          value={isLoading ? undefined : patterns.length}
+          value={isLoading || error ? undefined : patterns.length}
           loading={isLoading}
+          error={error}
         />
       </div>
 

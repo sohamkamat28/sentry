@@ -58,7 +58,7 @@ class AuditItemsItem(_Contract):
     vday: int
     actor: str
     action: str
-    target: str
+    target: str | None = None
     detail: dict
     entry_hash: str
 
@@ -66,7 +66,7 @@ class AuditItemsItem(_Contract):
 class Audit(_Contract):
 
     items: list[AuditItemsItem]
-    next_cursor: int
+    next_cursor: int | None = None
 
 
 class AuditVerify(_Contract):
@@ -122,8 +122,8 @@ class BehaviourItemsItem(_Contract):
 
     endpoint_id: str
     score: float
-    isolation_depth: float
-    patterns: list
+    isolation_depth: float | None = None
+    patterns: list[str]
 
 
 class Behaviour(_Contract):
@@ -132,9 +132,9 @@ class Behaviour(_Contract):
     fitted_on: int
     min_fit_endpoints: int
     withheld: str | None = None
-    flagged: int
-    scored: int
-    patterns: BehaviourPatterns
+    flagged: int | None = None
+    scored: int | None = None
+    patterns: dict[str, int]
     excluded_insufficient_history: int
     items: list[BehaviourItemsItem]
 
@@ -146,26 +146,27 @@ class ClassificationMatrixItem(_Contract):
     n: int
 
 
-class ClassificationConfidence(_Contract):
-
-    PROVISIONAL: int
-    CONFIRMED: int
-
-
 class Classification(_Contract):
 
     vday: int
     matrix: list[ClassificationMatrixItem]
-    confidence: ClassificationConfidence
+    confidence: dict[str, int]
     shadow_reliable: bool
 
 
-class ClassificationEndpointIdTraceItem(_Contract):
+class ClassificationEndpointIdTraceQuestion(_Contract):
 
     q: int
     question: str
-    answer: int
+    answer: int | bool
     source: str
+
+
+class ClassificationEndpointIdTraceRule(_Contract):
+
+    rule: str
+    applied: str
+    result: str | bool
 
 
 class ClassificationEndpointId(_Contract):
@@ -176,7 +177,7 @@ class ClassificationEndpointId(_Contract):
     confidence: str
     severity_bump: bool
     pre_zombie: bool
-    trace: list[ClassificationEndpointIdTraceItem]
+    trace: list[ClassificationEndpointIdTraceQuestion | ClassificationEndpointIdTraceRule]
     vday: int
     engine_version: str
 
@@ -215,19 +216,13 @@ class CorrelationEndpointIdOwnershipLadderItem(_Contract):
 class CorrelationEndpointIdOwnership(_Contract):
 
     endpoint_id: str
-    owner_email: str
+    owner_email: str | None = None
     owner_team: str | None = None
     resolved_by: str
     confidence: float
     reachable: bool
-    escalation: str
+    escalation: str | None = None
     ladder: list[CorrelationEndpointIdOwnershipLadderItem]
-
-
-class DecommissionBy_Phase(_Contract):
-
-    C: int
-    RETIRED: int
 
 
 class DecommissionItemsItemHidden_CallersItem(_Contract):
@@ -260,7 +255,7 @@ class DecommissionItemsItem(_Contract):
 class Decommission(_Contract):
 
     vday: int
-    by_phase: DecommissionBy_Phase
+    by_phase: dict[str, int]
     items: list[DecommissionItemsItem]
 
 
@@ -298,43 +293,35 @@ class EstateItemsItem(_Contract):
     method: str
     path: str
     service: str
-    team: str
+    team: str | None = None
     criticality: str
     auth: str
     tls_version: str | None = None
     rate_limited: bool
     data_classes: list[str]
-    last_call_vday: int
+    last_call_vday: int | None = None
     retired: bool
-    lifecycle: str
-    governance: str
-    confidence: str
+    lifecycle: str | None = None
+    governance: str | None = None
+    confidence: str | None = None
     pre_zombie: bool
-    cdri: float
-    tier: str
-    time_to_breach_d: int
+    cdri: float | None = None
+    tier: str | None = None
+    time_to_breach_d: int | None = None
 
 
 class Estate(_Contract):
 
     items: list[EstateItemsItem]
-    next_cursor: int | None = None
+    next_cursor: str | None = None
 
 
 class EstateEndpointIdService(_Contract):
 
     id: str
     name: str
-    team: str
+    team: str | None = None
     criticality: str
-
-
-class EstateEndpointIdClassificationTraceItem(_Contract):
-
-    q: int
-    question: str
-    answer: int
-    source: str
 
 
 class EstateEndpointIdClassification(_Contract):
@@ -344,7 +331,7 @@ class EstateEndpointIdClassification(_Contract):
     confidence: str
     pre_zombie: bool
     severity_bump: bool
-    trace: list[EstateEndpointIdClassificationTraceItem]
+    trace: list[ClassificationEndpointIdTraceQuestion | ClassificationEndpointIdTraceRule]
 
 
 class EstateEndpointIdCdriPartsItem(_Contract):
@@ -358,7 +345,7 @@ class EstateEndpointIdCdriPartsItem(_Contract):
 
 class EstateEndpointIdCdriTime_To_Breach(_Contract):
 
-    days: int
+    days: int | None = None
     basis: str
     factors: list[str]
 
@@ -416,11 +403,11 @@ class EstateEndpointIdOwnershipLadderItem(_Contract):
 
 class EstateEndpointIdOwnership(_Contract):
 
-    owner_email: str
+    owner_email: str | None = None
     reachable: bool
     confidence: float
     resolved_by: str
-    escalation: str
+    escalation: str | None = None
     ladder: list[EstateEndpointIdOwnershipLadderItem]
 
 
@@ -429,7 +416,7 @@ class EstateEndpointId(_Contract):
     id: str
     method: str
     path: str
-    service: EstateEndpointIdService
+    service: EstateEndpointIdService | None = None
     auth: str
     tls_version: str | None = None
     rate_limited: bool
@@ -439,15 +426,15 @@ class EstateEndpointId(_Contract):
     retired: bool
     honeypot_active: bool
     first_vday: int
-    last_call_vday: int
+    last_call_vday: int | None = None
     total_calls: int
     sources: list[str]
-    classification: EstateEndpointIdClassification
-    cdri: EstateEndpointIdCdri
-    anomaly: EstateEndpointIdAnomaly
-    forecast: EstateEndpointIdForecast
-    blast: EstateEndpointIdBlast
-    ownership: EstateEndpointIdOwnership
+    classification: EstateEndpointIdClassification | None = None
+    cdri: EstateEndpointIdCdri | None = None
+    anomaly: EstateEndpointIdAnomaly | None = None
+    forecast: EstateEndpointIdForecast | None = None
+    blast: EstateEndpointIdBlast | None = None
+    ownership: EstateEndpointIdOwnership | None = None
 
 
 class FindingsGenerators(_Contract):
@@ -481,7 +468,7 @@ class FindingsItemsItem(_Contract):
     model: str | None = None
     narrative: FindingsItemsItemNarrative
     regulations: list[FindingsItemsItemRegulationsItem]
-    time_to_breach_d: int
+    time_to_breach_d: int | None = None
     vday: int
 
 
@@ -618,12 +605,19 @@ class OperationsGate_EventsItem(_Contract):
     at: str
 
 
+class OperationsSummarySiem(_Contract):
+
+    host: str
+    format: str
+    configured: bool
+
+
 class Operations(_Contract):
 
     vday: int
     scan_interval_vhours: int
     scheduler_enabled: bool
-    siem: OperationsSiem
+    siem: OperationsSummarySiem
     stages: dict
     gate_events: list[OperationsGate_EventsItem]
 
@@ -652,8 +646,8 @@ class PipelineRun(_Contract):
     id: int
     trigger: str
     started_at: str
-    finished_at: str
-    ok: bool
+    finished_at: str | None = None
+    ok: bool | None = None
 
 
 class PipelineStagesItem(_Contract):
@@ -661,7 +655,7 @@ class PipelineStagesItem(_Contract):
     stage: int
     name: str
     depends_on: list
-    ok: bool
+    ok: bool | None = None
     records: int
     duration_ms: int
     error: str | None = None
@@ -670,7 +664,7 @@ class PipelineStagesItem(_Contract):
 class Pipeline(_Contract):
 
     vday: int
-    run: PipelineRun
+    run: PipelineRun | None = None
     stages: list[PipelineStagesItem]
     order: list[int]
 
@@ -742,6 +736,15 @@ class PolicyWeights(_Contract):
     history: list[PolicyWeightsHistoryItem]
 
 
+class RemediationItemsItemControlsItem(_Contract):
+
+    id: int
+    kind: str
+    state: str
+    generator: str
+    kong_plugin_id: str | None = None
+
+
 class RemediationItemsItem(_Contract):
 
     endpoint_id: str
@@ -749,8 +752,8 @@ class RemediationItemsItem(_Contract):
     path: str
     score: float
     tier: str
-    time_to_breach_d: int
-    controls: list
+    time_to_breach_d: int | None = None
+    controls: list[RemediationItemsItemControlsItem]
     applied: int
 
 
@@ -777,11 +780,11 @@ class RemediationEndpointIdControlsItem(_Contract):
     kind: str
     state: str
     generator: str
-    plugin_config: RemediationEndpointIdControlsItemPlugin_Config
-    kong_plugin_id: str
+    plugin_config: dict
+    kong_plugin_id: str | None = None
     origin_stage: int
     error: str | None = None
-    actor: str
+    actor: str | None = None
     judge: dict | None = None
 
 
@@ -797,7 +800,7 @@ class RemediationEndpointId(_Contract):
 
     endpoint_id: str
     controls: list[RemediationEndpointIdControlsItem]
-    change_request: RemediationEndpointIdChange_Request
+    change_request: RemediationEndpointIdChange_Request | None = None
 
 
 class RiskItemsItemPartsItem(_Contract):
@@ -811,7 +814,7 @@ class RiskItemsItemPartsItem(_Contract):
 
 class RiskItemsItemTime_To_Breach(_Contract):
 
-    days: int
+    days: int | None = None
     basis: str
     factors: list[str]
 
@@ -853,7 +856,7 @@ class System(_Contract):
 
 class ThreatLegal_Signoff(_Contract):
 
-    reference: str
+    reference: str | None = None
     signed: bool
 
 
@@ -978,8 +981,8 @@ class ZerotrustItemsItemControlsItem(_Contract):
 
     key: str
     ok: bool
-    current: str
-    remedy: str
+    current: str | None = None
+    remedy: str | None = None
     requires_migration: bool
 
 
@@ -996,7 +999,7 @@ class ZerotrustItemsItem(_Contract):
 
 class Zerotrust(_Contract):
 
-    distribution: dict
+    distribution: dict[str, int]
     gaps: dict[str, int]
     items: list[ZerotrustItemsItem]
 
@@ -1005,8 +1008,8 @@ class ZerotrustEndpointIdControlsItem(_Contract):
 
     key: str
     ok: bool
-    current: str
-    remedy: str
+    current: str | None = None
+    remedy: str | None = None
     requires_migration: bool
 
 

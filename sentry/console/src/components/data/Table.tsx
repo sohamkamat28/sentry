@@ -17,6 +17,7 @@ interface Props<T> {
   /** Shown only when the request succeeded and returned nothing. */
   empty?: string;
   onRowClick?: (row: T) => void;
+  rowLabel?: (row: T) => string;
 }
 
 /**
@@ -35,6 +36,7 @@ export function Table<T>({
   error,
   empty = "no rows",
   onRowClick,
+  rowLabel,
 }: Props<T>) {
   const span = columns.length;
   return (
@@ -80,6 +82,19 @@ export function Table<T>({
               <tr
                 key={rowKey(row)}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
+                onKeyDown={
+                  onRowClick
+                    ? (event) => {
+                        if (event.target !== event.currentTarget) return;
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          onRowClick(row);
+                        }
+                      }
+                    : undefined
+                }
+                tabIndex={onRowClick ? 0 : undefined}
+                aria-label={rowLabel?.(row)}
                 className={onRowClick ? "cursor-pointer hover:bg-line/40" : undefined}
               >
                 {columns.map((c) => (

@@ -25,6 +25,7 @@ export default {
         info: "rgb(var(--info) / <alpha-value>)",
       },
       fontFamily: {
+        sans: ["Avenir Next", "Segoe UI", "Helvetica Neue", "sans-serif"],
         mono: ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
       },
     },

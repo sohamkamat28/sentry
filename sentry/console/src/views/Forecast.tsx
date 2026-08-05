@@ -39,21 +39,24 @@ export function Forecast() {
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
         <Metric
           label="Pre-zombie"
-          value={isLoading ? undefined : data?.flagged}
+          value={isLoading || error ? undefined : data?.flagged}
           tone={data?.flagged ? "warn" : "ok"}
           loading={isLoading}
+          error={error}
           sub="stage 07 flagged"
         />
         <Metric
           label="Active endpoints"
-          value={isLoading ? undefined : data?.active}
+          value={isLoading || error ? undefined : data?.active}
           loading={isLoading}
+          error={error}
           sub="the ratio's denominator"
         />
         <Metric
           label="Flagged ratio"
-          value={isLoading ? undefined : pct(data?.flagged_ratio, 1)}
+          value={isLoading || error ? undefined : pct(data?.flagged_ratio, 1)}
           loading={isLoading}
+          error={error}
         />
         {/* Named separately from `active` because the two differ and the
             difference invites a misreading: every endpoint carrying a forecast
@@ -62,8 +65,9 @@ export function Forecast() {
             says what it is counting. */}
         <Metric
           label="Forecast series"
-          value={isLoading ? undefined : num(data?.items?.length)}
+          value={isLoading || error ? undefined : num(data?.items?.length)}
           loading={isLoading}
+          error={error}
           sub="endpoints with a fitted trend"
         />
       </div>
@@ -116,6 +120,7 @@ export function Forecast() {
         error={error as Error | null}
         empty="no endpoint is trending toward silence"
         onRowClick={setOpen}
+        rowLabel={(item) => `${item.method} ${item.path}`}
       />
 
       <Drawer

@@ -3,7 +3,7 @@ import { SLOW_MS, useLive } from "../lib/useLive";
 import { Metric } from "../components/data/Metric";
 import { Table } from "../components/data/Table";
 import { num } from "../lib/format";
-import type { Correlation as C } from "../lib/types";
+import type { Correlation as C } from "../lib/api-types";
 
 const RUNG_LABEL: Record<string, string> = {
   codeowners: "CODEOWNERS",
@@ -31,19 +31,21 @@ export function Correlation() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-        <Metric label="Sightings" value={isLoading ? undefined : data?.sightings} loading={isLoading} />
-        <Metric label="Endpoints" value={isLoading ? undefined : data?.endpoints} loading={isLoading} />
+        <Metric label="Sightings" value={isLoading || error ? undefined : data?.sightings} loading={isLoading} error={error} />
+        <Metric label="Endpoints" value={isLoading || error ? undefined : data?.endpoints} loading={isLoading} error={error} />
         <Metric
           label="Dedup ratio"
-          value={isLoading ? undefined : data?.dedup_ratio}
+          value={isLoading || error ? undefined : data?.dedup_ratio}
           loading={isLoading}
+          error={error}
           sub="sightings per endpoint"
         />
         <Metric
           label="Unreachable owners"
-          value={isLoading ? undefined : data?.ownership.unreachable}
+          value={isLoading || error ? undefined : data?.ownership.unreachable}
           tone={data?.ownership.unreachable ? "warn" : "ok"}
           loading={isLoading}
+          error={error}
           sub="departed, escalated"
         />
       </div>

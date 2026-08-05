@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     oidc_jwks_cache_s: int = 300
     auth_disabled: bool = False  # dev only; refused in prod by the validator below
 
-    cors_origins: str = "http://localhost:5173"
+    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     audit_verify_on_boot: bool = True
 
     # ── virtual clock ──

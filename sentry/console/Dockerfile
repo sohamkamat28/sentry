@@ -28,6 +28,10 @@ COPY src/ ./src/
 # different control plane is a different build, and says so.
 ARG VITE_API_BASE=http://localhost:8080
 ENV VITE_API_BASE=$VITE_API_BASE
+ARG VITE_OIDC_ISSUER=
+ARG VITE_OIDC_CLIENT_ID=sentry-console
+ENV VITE_OIDC_ISSUER=$VITE_OIDC_ISSUER
+ENV VITE_OIDC_CLIENT_ID=$VITE_OIDC_CLIENT_ID
 
 # The prose linter runs in the build, not just in CI. design/91-CONSOLE.md
 # prohibits copy that defines a term for the reader; enforcing it here means an

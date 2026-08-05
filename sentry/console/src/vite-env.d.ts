@@ -8,6 +8,9 @@ interface ImportMetaEnv {
    * a console there sends every control-plane call to the gateway under test.
    */
   readonly VITE_API_BASE?: string;
+  /** Enables OIDC authorization-code + PKCE. Omit for local dev-token mode. */
+  readonly VITE_OIDC_ISSUER?: string;
+  readonly VITE_OIDC_CLIENT_ID?: string;
 }
 
 interface ImportMeta {

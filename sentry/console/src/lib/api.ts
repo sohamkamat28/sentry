@@ -7,31 +7,10 @@
  * distinction this console exists to preserve.
  */
 
+import { expireAuth, getAccessToken } from "./auth";
+
 export const API_BASE: string =
   (import.meta.env.VITE_API_BASE as string | undefined) ?? "http://localhost:8080";
-
-const TOKEN_KEY = "sentry.token";
-
-/**
- * Dev identities the control plane accepts when AUTH_DISABLED is set. Listed so
- * an operator can switch role and see the permission boundary behave — an
- * analyst receiving 403 on apply is the governance requirement working, and it
- * should be demonstrable without editing a token by hand.
- */
-export const DEV_TOKENS = [
-  "dev-viewer",
-  "dev-analyst",
-  "dev-approver",
-  "dev-admin",
-] as const;
-
-export function getToken(): string {
-  return localStorage.getItem(TOKEN_KEY) ?? "dev-admin";
-}
-
-export function setToken(token: string): void {
-  localStorage.setItem(TOKEN_KEY, token);
-}
 
 export class ApiError extends Error {
   constructor(
@@ -51,13 +30,15 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = await getAccessToken();
+  if (!token) throw new ApiError(401, "AUTH_REQUIRED", "sign in is required");
   let resp: Response;
   try {
     resp = await fetch(`${API_BASE}/api/v1${path}`, {
       ...init,
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${getToken()}`,
+        ...(init?.body !== undefined ? { "Content-Type": "application/json" } : {}),
+        Authorization: `Bearer ${token}`,
         ...(init?.headers ?? {}),
       },
     });
@@ -74,11 +55,15 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     try {
       const body = await resp.json();
       code = body?.error?.code ?? body?.code ?? code;
-      message = body?.error?.message ?? body?.detail ?? message;
+      const candidate = body?.error?.message ?? body?.detail;
+      // FastAPI validation errors put an array in `detail`. Error.message must
+      // stay a string or React renders an object/array where copy is expected.
+      if (typeof candidate === "string") message = candidate;
       detail = body?.error?.detail ?? body;
     } catch {
       /* a non-JSON error body is still an error */
     }
+    if (resp.status === 401) expireAuth();
     throw new ApiError(resp.status, code, message, detail);
   }
 

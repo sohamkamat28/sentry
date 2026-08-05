@@ -34,6 +34,7 @@
 @layer base {
   html {
     color-scheme: dark;
+    scroll-behavior: smooth;
   }
   body {
     background: rgb(var(--bg));
@@ -49,6 +50,9 @@
   ::selection {
     background: rgb(var(--info));
     color: rgb(var(--bg));
+  }
+  :where(a, button, input, select, textarea):focus-visible {
+    @apply outline-none ring-2 ring-info/70 ring-offset-2 ring-offset-bg;
   }
 }
 
@@ -68,6 +72,7 @@
   }
   .btn {
     @apply rounded-sm border border-line bg-panel px-2.5 py-1 text-[12px]
-           hover:border-tx4 disabled:opacity-40 disabled:cursor-not-allowed;
+           transition duration-200 hover:border-tx4 active:translate-y-px
+           disabled:cursor-not-allowed disabled:opacity-40;
   }
 }

@@ -6,25 +6,7 @@ import { Confirm } from "../components/data/Confirm";
 import { Table } from "../components/data/Table";
 import { useRoute, routeQuery } from "../lib/router";
 import { score, tierClass } from "../lib/format";
-
-interface Control {
-  id: number;
-  kind: string;
-  state: string;
-  generator: string;
-  kong_plugin_id: string | null;
-}
-
-interface Item {
-  endpoint_id: string;
-  method: string;
-  path: string;
-  score: number;
-  tier: string;
-  time_to_breach_d: number | null;
-  controls: Control[];
-  applied: number;
-}
+import type { Remediation as RemediationResponse } from "../lib/api-types";
 
 const STATE_TONE: Record<string, string> = {
   APPLIED: "text-ok",
@@ -53,16 +35,22 @@ export function Remediation() {
   const focus = routeQuery(path).get("endpoint");
   const qc = useQueryClient();
 
-  const { data, isLoading, error } = useLive<{ items: Item[] }>("remediation", "/remediation", SLOW_MS);
+  const { data, isLoading, error } = useLive<RemediationResponse>("remediation", "/remediation", SLOW_MS);
 
   const revert = useMutation({
-    mutationFn: (id: number) => post(`/remediation/control/${id}/revert`, { reason: "operator" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["remediation"] }),
+    mutationFn: async ({ controlIds }: { endpointId: string; controlIds: number[] }) => {
+      for (const id of controlIds) await post(`/remediation/control/${id}/revert`);
+    },
+    onSuccess: () => qc.invalidateQueries(),
   });
 
   const apply = useMutation({
-    mutationFn: (endpointId: string) => post(`/remediation/${endpointId}/apply`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["remediation"] }),
+    mutationFn: async ({ endpointId, controlIds }: { endpointId: string; controlIds: number[] }) => {
+      for (const controlId of controlIds) {
+        await post(`/remediation/${endpointId}/apply`, { control_id: controlId });
+      }
+    },
+    onSuccess: () => qc.invalidateQueries(),
   });
 
   const rows = (data?.items ?? []).filter((i) => !focus || i.endpoint_id === focus);
@@ -122,23 +110,29 @@ export function Remediation() {
             // unlabelled `×` inside a chip. Both wrote to a live gateway on one
             // click, and both identified their target by row position — the one
             // thing that moves when a live list refreshes under the cursor.
-            render: (i) => (
-              <span onClick={(e) => e.stopPropagation()}>
-                <Confirm
-                  label="apply"
-                  disabled={i.controls.every((c) => c.state !== "JUDGED")}
-                  question={
-                    <>
-                      Write the judged controls for <b>{i.method} {i.path}</b> to
-                      the live gateway.
-                    </>
-                  }
-                  pending={apply.isPending}
-                  error={apply.error}
-                  onConfirm={() => apply.mutate(i.endpoint_id)}
-                />
-              </span>
-            ),
+            render: (i) => {
+              const judged = i.controls.filter((control) => control.state === "JUDGED");
+              return (
+                <span onClick={(e) => e.stopPropagation()}>
+                  <Confirm
+                    label={judged.length > 1 ? `apply ${judged.length}` : "apply"}
+                    disabled={judged.length === 0}
+                    question={
+                      <>
+                        Write {judged.map((control) => control.kind).join(", ")} for <b>{i.method} {i.path}</b> to
+                        the live gateway. Each control is applied separately and the sequence stops on the first refusal.
+                      </>
+                    }
+                    pending={apply.isPending && apply.variables?.endpointId === i.endpoint_id}
+                    error={apply.variables?.endpointId === i.endpoint_id ? apply.error : null}
+                    onConfirm={() => apply.mutate({
+                      endpointId: i.endpoint_id,
+                      controlIds: judged.map((control) => control.id),
+                    })}
+                  />
+                </span>
+              );
+            },
           },
           {
             key: "rev",
@@ -146,6 +140,9 @@ export function Remediation() {
             render: (i) => {
               const live = i.controls.filter((c) => c.state === "APPLIED");
               if (live.length === 0) return null;
+              const unique = [...new Map(
+                live.map((control) => [control.kong_plugin_id ?? `control:${control.id}`, control]),
+              ).values()];
               return (
                 <span onClick={(e) => e.stopPropagation()}>
                   <Confirm
@@ -158,9 +155,12 @@ export function Remediation() {
                         its unprotected behaviour immediately.
                       </>
                     }
-                    pending={revert.isPending}
-                    error={revert.error}
-                    onConfirm={() => live.forEach((c) => revert.mutate(c.id))}
+                    pending={revert.isPending && revert.variables?.endpointId === i.endpoint_id}
+                    error={revert.variables?.endpointId === i.endpoint_id ? revert.error : null}
+                    onConfirm={() => revert.mutate({
+                      endpointId: i.endpoint_id,
+                      controlIds: unique.map((control) => control.id),
+                    })}
                   />
                 </span>
               );

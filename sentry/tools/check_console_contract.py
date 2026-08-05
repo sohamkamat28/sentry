@@ -1,8 +1,8 @@
-"""Console type declarations, checked against what the control plane actually sends.
+"""Generated console type declarations, checked against live control-plane payloads.
 
-`console/src/lib/api.ts` is hand-written rather than generated from the OpenAPI
-contract — a divergence the README records under "what has not been run". This
-is what that divergence costs, and this script is how it is caught.
+`console/src/lib/api-types.ts` is generated from OpenAPI. Generation prevents a
+view from inventing a field, while this script catches a different failure: a
+declared server model that does not describe the payload its handler sends.
 
 The Operations view declared the `/pipeline` payload as `runs: [...]`. The
 endpoint returns one run, under `run`. `runs?.[0]` was therefore permanently
@@ -35,7 +35,6 @@ import urllib.request
 
 SRC = pathlib.Path(__file__).resolve().parent.parent / "console" / "src"
 VIEWS = SRC / "views"
-SHARED = SRC / "lib" / "types.ts"
 #: Generated from the control plane's own schema. Checked here too: a
 #: generated file can still be stale, and a stale one is a claim about the
 #: server exactly like a hand-written one.
@@ -59,12 +58,12 @@ CALL = re.compile(
 #: rename goes unnoticed.
 PROP = re.compile(r"^ {2}(\w+)\??:", re.M)
 
-#: `import type { Behaviour as B, Risk } from "../lib/types";`
+#: `import type { Behaviour as B, Risk } from "../lib/api-types";`
 IMPORT = re.compile(r"import type \{([^}]*)\} from", re.S)
 
 
 def aliases(src: str) -> dict[str, str]:
-    """Local name → declared name, for the shared types a view renames on import.
+    """Local name → declared name, for generated types a view renames on import.
 
     Seven of the seventeen surfaces import their response type under a one-letter
     alias. Matching on the local name alone found no interface for any of them,
@@ -86,14 +85,9 @@ def aliases(src: str) -> dict[str, str]:
 
 
 def interface_body(src: str, name: str) -> str | None:
-    """The interface's own body, from the view file or the shared declarations.
-
-    A view may declare its response shape locally or import it from
-    `lib/types.ts`; both are hand-written and both can drift, so looking only in
-    the view file would leave the shared ones unchecked while still printing OK.
-    """
+    """The interface's body, from the view file or generated declarations."""
     sources = [src]
-    for extra in (SHARED, GENERATED):
+    for extra in (GENERATED,):
         sources.append(extra.read_text() if extra.exists() else "")
     for text in sources:
         m = re.search(r"(?:export )?interface %s \{(.*?)\n\}" % re.escape(name),

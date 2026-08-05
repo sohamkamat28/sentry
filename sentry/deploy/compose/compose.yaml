@@ -283,7 +283,7 @@ services:
       # captured afterwards is built from nothing. Scaled up here so a
       # demonstration run outlives its own evidence.
       OBSERVATION_RETENTION_VDAYS: ${OBSERVATION_RETENTION_VDAYS:-100000}
-      CORS_ORIGINS: http://localhost:5173
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
       # Stage 01's non-kernel collectors. These are coverage claims: an endpoint
       # is only "absent from code" with respect to the repositories named here,
       # so an unset value makes every endpoint look undeclared rather than
@@ -442,6 +442,11 @@ services:
       # there sent every control-plane call to the gateway under test.
       args:
         VITE_API_BASE: ${VITE_API_BASE:-http://localhost:8080}
+        # Keep this empty for AUTH_DISABLED development. Set it to the public
+        # realm URL when API authentication is enabled; the SPA then uses
+        # authorization-code + PKCE and never embeds a client secret.
+        VITE_OIDC_ISSUER: ${VITE_OIDC_ISSUER:-}
+        VITE_OIDC_CLIENT_ID: ${VITE_OIDC_CLIENT_ID:-sentry-console}
     ports: ["5173:80"]
     depends_on:
       api: { condition: service_healthy }

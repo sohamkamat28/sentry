@@ -70,7 +70,10 @@ export function usePaused(): boolean {
 export function useLive<T>(key: string, path: string, intervalMs: number = LIVE_MS) {
   const isPaused = usePaused();
   return useQuery<T>({
-    queryKey: [key],
+    // Include the resource path as well as the semantic prefix. This prevents
+    // two variants of a surface (for example a filtered and unfiltered list)
+    // from sharing one cache entry while preserving prefix invalidation by key.
+    queryKey: [key, path],
     queryFn: () => get<T>(path),
     refetchInterval: isPaused ? false : intervalMs,
     // Keep showing the last good value while a refetch is in flight, so a live

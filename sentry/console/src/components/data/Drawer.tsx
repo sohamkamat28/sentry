@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 
 /**
  * Detail without navigation.
@@ -31,13 +31,37 @@ export function Drawer({
   footer,
   width = "min(680px, 92vw)",
 }: Props) {
+  const titleId = useId();
+  const panelRef = useRef<HTMLElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const previousFocus = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
     if (!open) return;
+    previousFocus.current = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
+      if (e.key !== "Tab") return;
+      const focusable = panelRef.current?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      previousFocus.current?.focus();
+    };
   }, [open, onClose]);
 
   if (!open) return null;
@@ -46,23 +70,34 @@ export function Drawer({
     <div className="fixed inset-0 z-40 flex justify-end">
       {/* The scrim dims the list without hiding it — the operator keeps the
           context they selected from. */}
-      <div className="flex-1 bg-bg/60" onClick={onClose} aria-hidden />
+      <button
+        className="flex-1 cursor-default bg-bg/60"
+        type="button"
+        tabIndex={-1}
+        aria-label="Close details"
+        onClick={onClose}
+      />
 
       <aside
+        ref={panelRef}
         className="flex h-full flex-col border-l border-line bg-panel shadow-2xl"
         style={{ width }}
         role="dialog"
         aria-modal="true"
+        aria-labelledby={titleId}
       >
         <header className="flex items-start gap-3 border-b border-line px-4 py-2.5">
           <div className="min-w-0">
-            <div className="truncate text-[13px] text-tx1">{title}</div>
+            <div id={titleId} className="truncate text-[13px] text-tx1">{title}</div>
             {subtitle && <div className="mt-0.5 text-[11.5px] text-tx3">{subtitle}</div>}
           </div>
           <button
+            ref={closeRef}
             className="ml-auto shrink-0 text-tx4 hover:text-tx1"
+            type="button"
             onClick={onClose}
             title="close (Esc)"
+            aria-label="Close details"
           >
             esc ✕
           </button>

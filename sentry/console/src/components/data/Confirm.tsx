@@ -44,7 +44,13 @@ export function Confirm({
   return (
     <div className="space-y-1.5">
       {!armed ? (
-        <button className="btn" disabled={disabled || pending} onClick={() => setArmed(true)}>
+        <button
+          className="btn"
+          type="button"
+          aria-expanded={armed}
+          disabled={disabled || pending}
+          onClick={() => setArmed(true)}
+        >
           {label}
         </button>
       ) : (
@@ -55,6 +61,7 @@ export function Confirm({
           <div className="flex items-center gap-2">
             <button
               className={`btn ${destructive ? "text-crit" : "text-warn"}`}
+              type="button"
               disabled={pending}
               onClick={() => {
                 setArmed(false);
@@ -63,7 +70,7 @@ export function Confirm({
             >
               {pending ? "working…" : `yes, ${label}`}
             </button>
-            <button className="btn text-tx3" disabled={pending} onClick={() => setArmed(false)}>
+            <button className="btn text-tx3" type="button" disabled={pending} onClick={() => setArmed(false)}>
               cancel
             </button>
           </div>

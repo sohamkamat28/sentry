@@ -90,7 +90,12 @@ def ts_type(schema: dict, spec: dict, depth: int = 0) -> str:
 
     t = schema.get("type")
     if t == "array":
-        return f"{ts_type(schema.get('items') or {}, spec, depth + 1)}[]"
+        item = ts_type(schema.get("items") or {}, spec, depth + 1)
+        # `A | B[]` means A-or-array-of-B. JSON Schema's array of a union is
+        # `(A | B)[]`, and the parentheses are semantically required.
+        if " | " in item:
+            item = f"({item})"
+        return f"{item}[]"
     if t == "string":
         if schema.get("enum"):
             return " | ".join(json.dumps(e) for e in schema["enum"])
@@ -125,10 +130,12 @@ def emit_interface(name: str, schema: dict, spec: dict) -> str:
         opt = "" if k in required else "?"
         key = k if re.match(r"^[A-Za-z_$][A-Za-z0-9_$]*$", k) else json.dumps(k)
         lines.append(f"  {key}{opt}: {ts_type(v, spec)};")
-    # extra="allow" on the server side: a handler may return more than it
-    # declares, and the index signature says so rather than pretending it cannot.
-    if props and schema.get("additionalProperties") is not False:
-        lines.append("  [key: string]: unknown;")
+    # Do not mirror Pydantic's ``extra=allow`` as an index signature. The server
+    # uses that setting to avoid filtering a response at runtime; carrying it
+    # into TypeScript makes every misspelled property legal. That hid
+    # ``owner_resolved`` in the Operations view even though the route has never
+    # returned such a field. Additive response fields remain safe in structural
+    # typing without weakening every declared consumer to ``unknown``.
     lines.append("}")
     return "\n".join(lines)
 

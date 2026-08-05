@@ -3,8 +3,8 @@ import { useState } from "react";
 import { SLOW_MS, useLive } from "../lib/useLive";
 import { Table } from "../components/data/Table";
 import { navigate } from "../lib/router";
-import { score, tierClass } from "../lib/format";
-import type { Risk } from "../lib/types";
+import { num, score, tierClass } from "../lib/format";
+import type { Risk } from "../lib/api-types";
 
 const TIERS = ["CRITICAL", "HIGH", "MEDIUM", "LOW"];
 
@@ -19,14 +19,17 @@ export function RiskRegister() {
   const { data, isLoading, error } = useLive<Risk>("risk", "/risk?limit=200", SLOW_MS);
 
   const rows = data?.items ?? [];
-  const counts = TIERS.map((t) => ({ tier: t, n: rows.filter((r) => r.tier === t).length }));
+  const counts = TIERS.map((t) => ({
+    tier: t,
+    n: error ? undefined : rows.filter((r) => r.tier === t).length,
+  }));
 
   return (
     <div className="space-y-4">
       <div className="flex gap-2 text-[11.5px]">
         {counts.map((c) => (
           <span key={c.tier} className={`chip ${tierClass(c.tier)}`}>
-            {c.tier} {c.n}
+            {c.tier} {num(c.n)}
           </span>
         ))}
         {rows[0] && (
@@ -56,6 +59,7 @@ export function RiskRegister() {
             render: (r) => (
               <button
                 className="text-info"
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   setOpen(open === r.endpoint_id ? null : r.endpoint_id);
@@ -71,6 +75,7 @@ export function RiskRegister() {
         loading={isLoading}
         error={error as Error | null}
         onRowClick={(r) => navigate(`/remediation?endpoint=${r.endpoint_id}`)}
+        rowLabel={(r) => `Open remediation for ${r.method} ${r.path}`}
       />
 
       {open && (
@@ -81,8 +86,8 @@ export function RiskRegister() {
           <Table
             columns={[
               { key: "k", header: "term", render: (p) => p.key },
-              { key: "w", header: "weight", align: "right", render: (p) => score(p.weight, 2) },
-              { key: "v", header: "value", align: "right", render: (p) => score(p.value) },
+              { key: "w", header: "weight", align: "right", render: (p) => score(p.w, 2) },
+              { key: "v", header: "value", align: "right", render: (p) => score(p.r) },
               {
                 key: "c",
                 header: "contribution",

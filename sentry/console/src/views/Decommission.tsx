@@ -1,26 +1,11 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { get, post, ApiError } from "../lib/api";
+import { post, ApiError } from "../lib/api";
+import { Confirm } from "../components/data/Confirm";
 import { Table } from "../components/data/Table";
 import { num, vday, when } from "../lib/format";
-
-interface Item {
-  endpoint_id: string;
-  method: string;
-  path: string;
-  phase: string;
-  express: boolean;
-  canary: boolean;
-  canary_split: number | null;
-  entered_vday: number;
-  phase_vday: number | null;
-  hold: boolean;
-  hold_reason: string | null;
-  hidden_callers: { service?: string }[];
-  worm_object: string | null;
-  worm_retain_until: string | null;
-  certificate_id: string | null;
-}
+import { SLOW_MS, useLive } from "../lib/useLive";
+import type { Decommission as DecommissionResponse } from "../lib/api-types";
 
 const PHASE_TONE: Record<string, string> = {
   NONE: "text-tx4",
@@ -42,22 +27,25 @@ const PHASE_TONE: Record<string, string> = {
  */
 export function Decommission() {
   const qc = useQueryClient();
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["decommission"],
-    queryFn: () => get<{ vday: number; by_phase: Record<string, number>; items: Item[] }>(
-      "/decommission",
-    ),
-  });
+  const { data, isLoading, error } = useLive<DecommissionResponse>(
+    "decommission",
+    "/decommission",
+    SLOW_MS,
+  );
 
   const release = useMutation({
     mutationFn: (id: string) =>
       post(`/decommission/${id}/advance`, { reason: "quarantine reviewed" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["decommission"] }),
+    onSuccess: () => qc.invalidateQueries(),
   });
 
   const hold = useMutation({
-    mutationFn: (id: string) => post(`/decommission/${id}/hold`, { hold: true, reason: "operator" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["decommission"] }),
+    mutationFn: ({ id, value }: { id: string; value: boolean }) =>
+      post(`/decommission/${id}/hold`, {
+        hold: value,
+        reason: value ? "operator hold" : "operator released hold",
+      }),
+    onSuccess: () => qc.invalidateQueries(),
   });
 
   const failure = (release.error ?? hold.error) as ApiError | null;
@@ -88,66 +76,105 @@ export function Decommission() {
         columns={[
           { key: "ep", header: "endpoint", render: (i) => `${i.method} ${i.path}` },
           {
+            // The lane rides on the phase rather than taking a column of its
+            // own: it qualifies where the endpoint sits in the sequence, and as
+            // a column it printed "express" down every row of the table.
             key: "ph",
             header: "phase",
             render: (i) => (
               <span className={PHASE_TONE[i.phase] ?? ""}>
                 {i.phase}
                 {i.hold && <span className="text-warn"> ·held</span>}
+                {(i.express || i.canary) && (
+                  <span className="ml-1 text-[10.5px] text-tx4">
+                    {i.express ? "express" : "canary"}
+                  </span>
+                )}
               </span>
             ),
           },
-          {
-            key: "path",
-            header: "path",
-            render: (i) => (i.express ? "express" : i.canary ? "canary" : "standard"),
-          },
           { key: "ent", header: "entered", align: "right", render: (i) => vday(i.entered_vday) },
           {
+            // Counted, not listed. These resolve to container ids, and printed
+            // in full they wrapped to five lines — making one row as tall as
+            // five and burying the endpoints with no callers, which are exactly
+            // the ones that are safe to release.
             key: "hc",
             header: "hidden callers",
-            render: (i) =>
-              i.hidden_callers?.length ? (
-                <span className="text-crit">
-                  {i.hidden_callers.map((c) => c.service ?? "?").join(" ")}
+            align: "right",
+            render: (i) => {
+              const n = i.hidden_callers?.length ?? 0;
+              if (n === 0) return <span className="text-tx4">none</span>;
+              return (
+                <span
+                  className="text-crit"
+                  title={i.hidden_callers.map((c) => c.service ?? "?").join("\n")}
+                >
+                  {n}
                 </span>
-              ) : (
-                "none"
-              ),
+              );
+            },
           },
           {
+            // One column for the retirement record. The WORM object and the
+            // certificate arrive together at Phase D and are both an em dash
+            // until then, so two columns spent width saying "not yet" twice.
             key: "worm",
             header: "archive",
             render: (i) =>
               i.worm_object ? (
-                <span className="text-ok" title={i.worm_object}>
+                <span
+                  className="whitespace-nowrap text-ok"
+                  title={`${i.worm_object}${i.certificate_id ? `\ncertificate ${i.certificate_id}` : ""}`}
+                >
                   retained to {when(i.worm_retain_until).slice(0, 10)}
                 </span>
               ) : (
-                "—"
+                <span className="text-tx4">—</span>
               ),
-          },
-          {
-            key: "cert",
-            header: "certificate",
-            render: (i) => (i.certificate_id ? i.certificate_id : "—"),
           },
           {
             key: "act",
             header: "",
             render: (i) =>
               i.phase === "RETIRED" ? null : (
-                <span className="flex gap-1">
+                // `nowrap`, because the labels are two words. Left to wrap in a
+                // narrow cell, "release hold" broke across two lines inside its
+                // own border and read as a rendering fault rather than a button.
+                <span
+                  className="flex flex-nowrap gap-1 whitespace-nowrap"
+                  onClick={(event) => event.stopPropagation()}
+                >
                   {i.phase === "C" && (
-                    <button className="btn" onClick={() => release.mutate(i.endpoint_id)}>
-                      release
-                    </button>
+                    <Confirm
+                      label="release"
+                      destructive
+                      disabled={i.hold}
+                      pending={release.isPending && release.variables === i.endpoint_id}
+                      error={release.variables === i.endpoint_id ? release.error : null}
+                      question={
+                        <>
+                          Release <b>{i.method} {i.path}</b> from quarantine into Phase D.
+                          {i.hidden_callers.length > 0
+                            ? ` ${i.hidden_callers.length} hidden caller(s) are still recorded; the server will refuse release until policy permits it.`
+                            : " The route will be archived before retirement proceeds."}
+                        </>
+                      }
+                      onConfirm={() => release.mutate(i.endpoint_id)}
+                    />
                   )}
-                  {!i.hold && (
-                    <button className="btn" onClick={() => hold.mutate(i.endpoint_id)}>
-                      hold
-                    </button>
-                  )}
+                  <Confirm
+                    label={i.hold ? "release hold" : "hold"}
+                    destructive={!i.hold}
+                    pending={hold.isPending && hold.variables?.id === i.endpoint_id}
+                    error={hold.variables?.id === i.endpoint_id ? hold.error : null}
+                    question={
+                      i.hold
+                        ? <>Release the operator hold on <b>{i.method} {i.path}</b> so its sunset clock may continue.</>
+                        : <>Pause the sunset clock for <b>{i.method} {i.path}</b>.</>
+                    }
+                    onConfirm={() => hold.mutate({ id: i.endpoint_id, value: !i.hold })}
+                  />
                 </span>
               ),
           },

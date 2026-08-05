@@ -1,20 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
-import { get, post } from "../lib/api";
-import { Confirm } from "../components/data/Confirm";
+import { get } from "../lib/api";
 import { Field, Section } from "../components/data/Drawer";
-import { micros, num, pct, score } from "../lib/format";
+import { num, pct, score } from "../lib/format";
 import { navigate } from "../lib/router";
 import {
-  controlTone,
   governanceTone,
   lifecycleTone,
   tierTone,
   toneText,
 } from "../lib/severity";
 import { SLOW_MS, useLive } from "../lib/useLive";
-import type { Decommission, Risk, Threat } from "../lib/api-types";
+import type {
+  ClassificationEndpointId,
+  CorrelationEndpointIdOwnership,
+  Decommission,
+  ImpactEndpointId,
+  Risk,
+  Threat,
+} from "../lib/api-types";
 
 /**
  * What needs me now.
@@ -25,11 +30,10 @@ import type { Decommission, Risk, Threat } from "../lib/api-types";
  * head — so in practice nobody ranked anything, they worked whichever list they
  * happened to open.
  *
- * This is that merge, done once and kept live. Three panes, which is where
- * every real operations tool lands: the queue never loses your place, the
- * evidence arrives beside the item, and the action sits next to the evidence it
- * should be taken on. Nothing here computes a new verdict — every figure is
- * already produced by a stage and served by an existing route.
+ * This is that merge, done once and kept live. The queue never loses your
+ * place, and the evidence arrives beside the item. Nothing here computes a new
+ * verdict — every figure is already produced by a stage and served by an
+ * existing route.
  */
 
 type Kind = "risk" | "sunset" | "resurrection";
@@ -175,9 +179,9 @@ export function Triage() {
   const failed = risk.error ?? sunset.error ?? threat.error;
 
   return (
-    <div className="grid h-full min-h-0 grid-cols-1 gap-3 lg:grid-cols-[minmax(320px,1fr)_minmax(0,1.2fr)_minmax(280px,0.9fr)]">
+    <div className="grid min-h-0 grid-cols-1 gap-3 md:h-full lg:grid-cols-[minmax(320px,1fr)_minmax(0,1.2fr)]">
       {/* ── queue ─────────────────────────────────────────────────────── */}
-      <div className="panel flex min-h-0 flex-col">
+      <div className="panel flex min-h-[300px] flex-col lg:min-h-0">
         <div className="flex items-center gap-1.5 border-b border-line px-2.5 py-1.5">
           <span className="text-[10.5px] uppercase tracking-wider text-tx3">queue</span>
           <span className="num text-[11px] text-tx4">{visible.length}</span>
@@ -185,6 +189,7 @@ export function Triage() {
             {(Object.keys(KIND_LABEL) as Kind[]).map((k) => (
               <button
                 key={k}
+                type="button"
                 className={`chip ${kinds.has(k) ? "text-tx1" : "text-tx4 opacity-50"}`}
                 onClick={() =>
                   setKinds((s) => {
@@ -216,6 +221,7 @@ export function Triage() {
             return (
               <button
                 key={r.key}
+                type="button"
                 onClick={() => setSelected(r.key)}
                 className={`block w-full border-b border-line/60 px-2.5 py-1.5 text-left ${
                   on ? "bg-line/60" : "hover:bg-line/25"
@@ -252,20 +258,11 @@ export function Triage() {
       </div>
 
       {/* ── evidence ──────────────────────────────────────────────────── */}
-      <div className="panel min-h-0 overflow-y-auto">
+      <div className="panel min-h-[300px] overflow-y-auto lg:min-h-0">
         {current ? (
           <Evidence row={current} />
         ) : (
           <p className="px-3 py-2 text-[12px] text-tx4">select an item</p>
-        )}
-      </div>
-
-      {/* ── act ───────────────────────────────────────────────────────── */}
-      <div className="panel min-h-0 overflow-y-auto">
-        {current ? (
-          <Act endpointId={current.endpointId} />
-        ) : (
-          <p className="px-3 py-2 text-[12px] text-tx4">—</p>
         )}
       </div>
     </div>
@@ -276,15 +273,15 @@ export function Triage() {
 function Evidence({ row }: { row: Row }) {
   const cls = useQuery({
     queryKey: ["classification", row.endpointId],
-    queryFn: () => get<any>(`/classification/${row.endpointId}`),
+    queryFn: () => get<ClassificationEndpointId>(`/classification/${row.endpointId}`),
   });
   const impact = useQuery({
     queryKey: ["impact", row.endpointId],
-    queryFn: () => get<any>(`/impact/${row.endpointId}`),
+    queryFn: () => get<ImpactEndpointId>(`/impact/${row.endpointId}`),
   });
   const own = useQuery({
     queryKey: ["ownership", row.endpointId],
-    queryFn: () => get<any>(`/correlation/${row.endpointId}/ownership`),
+    queryFn: () => get<CorrelationEndpointIdOwnership>(`/correlation/${row.endpointId}/ownership`),
   });
   const risk = useQuery({
     queryKey: ["risk-one", row.endpointId],
@@ -300,6 +297,18 @@ function Evidence({ row }: { row: Row }) {
 
   return (
     <div className="px-3 py-2.5">
+      {[cls.error, impact.error, own.error, risk.error].some(Boolean) ? (
+        <div className="mb-3 space-y-1 panel border-crit px-3 py-2 text-[11.5px] text-crit">
+          {([
+            ["classification", cls.error],
+            ["blast radius", impact.error],
+            ["ownership", own.error],
+            ["risk", risk.error],
+          ] as const).map(([label, failure]) => failure ? (
+            <div key={label}>{label} unavailable — {(failure as Error).message}</div>
+          ) : null)}
+        </div>
+      ) : null}
       <div className="mb-3">
         <div className="text-[13px] text-tx1">
           {row.method} {row.path}
@@ -316,6 +325,7 @@ function Evidence({ row }: { row: Row }) {
           <span className="text-tx3">{cls.data?.confidence ?? "—"}</span>
           <button
             className="ml-auto text-[10.5px] text-info hover:underline"
+            type="button"
             onClick={() => navigate(`/estate?endpoint=${row.endpointId}`)}
           >
             open in register →
@@ -364,8 +374,8 @@ function Evidence({ row }: { row: Row }) {
              (`rule`/`applied`/`result`) — and the rules are the half that
              actually produces the verdict. Rendering only the questions printed
              four rows of `undefined` where the reasoning should have been. */
-          (cls.data?.trace ?? []).map((t: any, i: number) =>
-            t.rule ? (
+          (cls.data?.trace ?? []).map((t, i) =>
+            "rule" in t ? (
               <div
                 key={i}
                 className="flex items-baseline gap-2 border-t border-line/60 py-0.5 text-[11.5px] first:border-0"
@@ -424,138 +434,6 @@ function Evidence({ row }: { row: Row }) {
           }
         />
       </Section>
-    </div>
-  );
-}
-
-/** The controls, the evidence they were judged on, and the buttons. */
-function Act({ endpointId }: { endpointId: string }) {
-  const qc = useQueryClient();
-  const { data, isLoading } = useQuery({
-    queryKey: ["remediation-detail", endpointId],
-    queryFn: () => get<any>(`/remediation/${endpointId}`),
-  });
-
-  const apply = useMutation({
-    mutationFn: (controlId: number) =>
-      post(`/remediation/${endpointId}/apply`, { control_id: controlId }),
-    onSuccess: () => qc.invalidateQueries(),
-  });
-  const revert = useMutation({
-    mutationFn: (controlId: number) =>
-      post(`/remediation/control/${controlId}/revert`, { reason: "operator" }),
-    onSuccess: () => qc.invalidateQueries(),
-  });
-
-  const controls = data?.controls ?? [];
-
-  return (
-    <div className="px-3 py-2.5">
-      <h3 className="mb-2 text-[10.5px] uppercase tracking-wider text-tx3">controls</h3>
-
-      {isLoading && <p className="text-[12px] text-tx4">loading…</p>}
-      {!isLoading && controls.length === 0 && (
-        <p className="text-[12px] text-tx4">
-          none proposed — stage 10 generates these on its next pass
-        </p>
-      )}
-
-      <div className="space-y-3">
-        {controls.map((c: any) => (
-          <div key={c.id} className="panel px-2.5 py-2">
-            <div className="flex items-baseline gap-2">
-              <span className="text-[12px] text-tx1">{c.kind}</span>
-              <span className={`chip ${toneText(controlTone(c.state))}`}>
-                {c.state.toLowerCase()}
-              </span>
-            </div>
-
-            {/* The verdict sits beside the button, not on another surface. An
-                approver authorising a gateway write is entitled to see the
-                measurement it rests on without navigating away from it. */}
-            {c.judge ? (
-              <div className="mt-1.5 space-y-0.5 text-[11px]">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-tx4">judge</span>
-                  <span className={c.judge.verdict === "PASS" ? "text-ok" : "text-warn"}>
-                    {c.judge.verdict}
-                  </span>
-                  {c.judge.reason && <span className="text-tx3">{c.judge.reason}</span>}
-                </div>
-                <div className="flex flex-wrap gap-x-3 text-tx3">
-                  <span>schema {c.judge.scores?.schema}</span>
-                  <span>error {c.judge.scores?.error}</span>
-                  <span>exposure {c.judge.scores?.exposure}</span>
-                  <span
-                    className={
-                      c.judge.scores?.latency === 0 ? "text-warn" : undefined
-                    }
-                  >
-                    latency {c.judge.scores?.latency}
-                  </span>
-                </div>
-                <div className="text-tx4">
-                  {micros(c.judge.latency_delta_us)} against a{" "}
-                  {micros(c.judge.budget_us)} budget · {c.judge.replay?.requests} replayed
-                  {c.judge.replay?.bodyless > 0 && (
-                    <span className="text-warn"> · {c.judge.replay.bodyless} bodyless</span>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <p className="mt-1 text-[11px] text-tx4">not yet judged</p>
-            )}
-
-            <div className="mt-2">
-              {c.state === "APPLIED" ? (
-                <Confirm
-                  label="revert"
-                  destructive
-                  question={
-                    <>
-                      Remove <b>{c.kind}</b> from the live gateway for this endpoint. The
-                      route returns to its unprotected behaviour immediately.
-                    </>
-                  }
-                  pending={revert.isPending}
-                  error={revert.error}
-                  onConfirm={() => revert.mutate(c.id)}
-                />
-              ) : c.state === "JUDGED" ? (
-                <Confirm
-                  label="apply"
-                  question={
-                    <>
-                      Write <b>{c.kind}</b> to the live gateway for this endpoint.
-                    </>
-                  }
-                  pending={apply.isPending}
-                  error={apply.error}
-                  onConfirm={() => apply.mutate(c.id)}
-                />
-              ) : (
-                <span className="text-[11px] text-tx4">
-                  {c.state === "REJECTED"
-                    ? "refused by the Judge on measured evidence"
-                    : "awaiting the Judge"}
-                </span>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {data?.change_request && (
-        <Section title="change request">
-          <Field label="number" value={data.change_request.number ?? "—"} />
-          <Field label="state" value={data.change_request.state} />
-          {data.change_request.stub && (
-            <p className="mt-1 text-[11px] text-warn">
-              stub — no live ServiceNow instance is configured
-            </p>
-          )}
-        </Section>
-      )}
     </div>
   );
 }

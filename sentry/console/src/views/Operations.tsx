@@ -5,7 +5,7 @@ import { post, ApiError } from "../lib/api";
 import type { Operations as Ops, OperationsLeaderboard as Leaderboard, Pipeline } from "../lib/api-types";
 import { Metric } from "../components/data/Metric";
 import { Table } from "../components/data/Table";
-import { num, score, when } from "../lib/format";
+import { num, pct, score, when } from "../lib/format";
 
 /**
  * The loop: schedule, pipeline health, the build gate, and team debt.
@@ -34,10 +34,11 @@ export function Operations() {
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
         <Metric
           label="Scheduler"
-          value={ops.isLoading ? undefined : ops.data?.scheduler_enabled ? "on" : "off"}
+          value={ops.isLoading || ops.error ? undefined : ops.data?.scheduler_enabled ? "on" : "off"}
           tone={ops.data?.scheduler_enabled ? "ok" : "warn"}
           loading={ops.isLoading}
-          sub={`every ${ops.data?.scan_interval_vhours ?? "—"} vhours`}
+          error={ops.error}
+          sub={ops.data ? `every ${ops.data.scan_interval_vhours} vhours` : undefined}
         />
         <Metric
           label="Last run"
@@ -54,19 +55,22 @@ export function Operations() {
           }
           tone={latest?.ok === false ? "crit" : latest?.ok ? "ok" : "dim"}
           loading={pipe.isLoading}
+          error={pipe.error}
           sub={latest ? when(latest.started_at) : undefined}
         />
         <Metric
           label="SIEM"
-          value={ops.isLoading ? undefined : ops.data?.siem.configured ? ops.data.siem.format : "off"}
+          value={ops.isLoading || ops.error ? undefined : ops.data?.siem.configured ? ops.data.siem.format : "off"}
           tone={ops.data?.siem.configured ? "ok" : "dim"}
           loading={ops.isLoading}
+          error={ops.error}
           sub={ops.data?.siem.host ?? undefined}
         />
         <Metric
           label="Gate events"
-          value={ops.isLoading ? undefined : ops.data?.gate_events.length}
+          value={ops.isLoading || ops.error ? undefined : ops.data?.gate_events.length}
           loading={ops.isLoading}
+          error={ops.error}
           sub={
             ops.data?.gate_events.filter((g) => !g.passed).length
               ? `${ops.data.gate_events.filter((g) => !g.passed).length} failed`
@@ -76,7 +80,7 @@ export function Operations() {
       </div>
 
       <div>
-        <button className="btn" disabled={scan.isPending} onClick={() => scan.mutate()}>
+        <button className="btn" type="button" disabled={scan.isPending} onClick={() => scan.mutate()}>
           {scan.isPending ? "scanning…" : "run scan now"}
         </button>
         {failure && (
@@ -120,6 +124,7 @@ export function Operations() {
             rows={pipe.data?.stages ?? []}
             rowKey={(s) => String(s.stage)}
             loading={pipe.isLoading}
+            error={pipe.error as Error | null}
           />
         </section>
       )}
@@ -133,13 +138,14 @@ export function Operations() {
             { key: "e", header: "endpoints", align: "right", render: (t) => num(t.endpoints) },
             {
               key: "res",
-              header: "ownership",
-              render: (t) =>
-                t.owner_resolved === false ? (
-                  <span className="text-warn">unresolved</span>
-                ) : (
-                  <span className="text-ok">resolved</span>
-                ),
+              header: "attribution",
+              render: (t) => t.team === "(unattributed)" ? (
+                <span className="text-warn">unassigned</span>
+              ) : (
+                <span className={t.ownership_confidence < 0.7 ? "text-warn" : "text-ok"}>
+                  {pct(t.ownership_confidence)} confidence
+                </span>
+              ),
             },
           ]}
           rows={board.data?.teams}

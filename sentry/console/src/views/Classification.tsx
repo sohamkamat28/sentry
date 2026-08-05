@@ -4,7 +4,7 @@ import { Metric } from "../components/data/Metric";
 import { Table } from "../components/data/Table";
 import { navigate } from "../lib/router";
 import { governanceClass, lifecycleClass, num } from "../lib/format";
-import type { Classification as C } from "../lib/types";
+import type { Classification as C } from "../lib/api-types";
 
 export function Classification() {
   const { data, isLoading, error } = useLive<C>("classification", "/classification", SLOW_MS);
@@ -16,28 +16,32 @@ export function Classification() {
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
         <Metric
           label="Confirmed"
-          value={isLoading ? undefined : conf.CONFIRMED ?? 0}
+          value={isLoading || error ? undefined : conf.CONFIRMED ?? 0}
           loading={isLoading}
+          error={error}
           sub="90 vdays observed"
         />
         <Metric
           label="Provisional"
-          value={isLoading ? undefined : conf.PROVISIONAL ?? 0}
+          value={isLoading || error ? undefined : conf.PROVISIONAL ?? 0}
           loading={isLoading}
+          error={error}
           tone="warn"
           sub="below 90 vdays"
         />
         <Metric
           label="None"
-          value={isLoading ? undefined : conf.NONE ?? 0}
+          value={isLoading || error ? undefined : conf.NONE ?? 0}
           loading={isLoading}
+          error={error}
           sub="below baseline"
         />
         <Metric
           label="Shadow comparison"
-          value={isLoading ? undefined : data?.shadow_reliable ? "live" : "degraded"}
+          value={isLoading || error ? undefined : data?.shadow_reliable ? "live" : "degraded"}
           tone={data?.shadow_reliable ? "ok" : "crit"}
           loading={isLoading}
+          error={error}
           sub={data?.shadow_reliable ? "gateway reachable" : "gateway unreachable"}
         />
       </div>
@@ -65,6 +69,7 @@ export function Classification() {
         onRowClick={(m) =>
           navigate(`/estate?lifecycle=${m.lifecycle}&governance=${m.governance}`)
         }
+        rowLabel={(m) => `Show ${m.lifecycle} ${m.governance} endpoints`}
       />
     </div>
   );

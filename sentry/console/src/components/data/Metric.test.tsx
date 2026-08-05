@@ -34,4 +34,11 @@ describe("Metric", () => {
     rerender(<Metric value={1} label="X" sub="threshold 0.85" />);
     expect(screen.getByText("threshold 0.85")).toBeTruthy();
   });
+
+  it("withholds a stale value when the read failed", () => {
+    render(<Metric value={0} label="Scheduler failures" error={new Error("offline")} />);
+    expect(screen.getByText("—")).toBeTruthy();
+    expect(screen.queryByText("0")).toBeNull();
+    expect(screen.getByText(/unavailable — offline/i)).toBeTruthy();
+  });
 });

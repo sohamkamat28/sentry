@@ -1,10 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
-
-import { get } from "../lib/api";
+import { SLOW_MS, useLive } from "../lib/useLive";
 import { Metric } from "../components/data/Metric";
 import { Table } from "../components/data/Table";
 import { num, vday } from "../lib/format";
-import type { Discovery } from "../lib/types";
+import type { Discovery } from "../lib/api-types";
 
 /**
  * Where endpoints came from.
@@ -14,35 +12,34 @@ import type { Discovery } from "../lib/types";
  * shadow rather than an inference about it.
  */
 export function SensorGrid() {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["discovery"],
-    queryFn: () => get<Discovery>("/discovery"),
-    refetchInterval: 15_000,
-  });
+  const { data, isLoading, error } = useLive<Discovery>("discovery", "/discovery", SLOW_MS);
 
   const unreachable = (data?.sources ?? []).filter((s) => !s.healthy);
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-        <Metric label="vday" value={isLoading ? undefined : vday(data?.vday)} loading={isLoading} />
+        <Metric label="vday" value={isLoading || error ? undefined : vday(data?.vday)} loading={isLoading} error={error} />
         <Metric
           label="Sources"
-          value={isLoading ? undefined : data?.sources.length}
+          value={isLoading || error ? undefined : data?.sources.length}
           loading={isLoading}
+          error={error}
         />
         <Metric
           label="Shadow"
-          value={isLoading ? undefined : data?.shadow_count}
+          value={isLoading || error ? undefined : data?.shadow_count}
           tone={data?.shadow_count ? "crit" : "ok"}
           loading={isLoading}
+          error={error}
           degraded={data ? !data.shadow_reliable : false}
         />
         <Metric
           label="Unreachable"
-          value={isLoading ? undefined : unreachable.length}
+          value={isLoading || error ? undefined : unreachable.length}
           tone={unreachable.length ? "crit" : "ok"}
           loading={isLoading}
+          error={error}
           sub={unreachable.map((s) => s.source).join(" ") || undefined}
         />
       </div>
