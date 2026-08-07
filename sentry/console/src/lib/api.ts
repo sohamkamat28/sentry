@@ -8,6 +8,7 @@
  */
 
 import { expireAuth, getAccessToken } from "./auth";
+import { STATIC_MODE, get as fromSnapshot } from "./snapshot";
 
 export const API_BASE: string =
   (import.meta.env.VITE_API_BASE as string | undefined) ?? "http://localhost:8080";
@@ -71,11 +72,24 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await resp.json()) as T;
 }
 
+/**
+ * A read. In a static build this resolves from the frozen recording instead of
+ * the network, so every view keeps the query it already had and none of them
+ * need to know which mode they are running in.
+ */
 export function get<T>(path: string): Promise<T> {
-  return request<T>(path);
+  return STATIC_MODE ? fromSnapshot<T>(path) : request<T>(path);
 }
 
 export function post<T>(path: string, body?: unknown): Promise<T> {
+  // There is no control plane behind a static build, and a write that silently
+  // resolved would be the console lying about having done something. Callers
+  // render this as a plain refusal.
+  if (STATIC_MODE) {
+    return Promise.reject(
+      new ApiError(0, "RECORDING", "this is a recorded run — actions are read-only here"),
+    );
+  }
   return request<T>(path, {
     method: "POST",
     body: body === undefined ? "{}" : JSON.stringify(body),

@@ -1,13 +1,20 @@
 import { useEffect, type ReactNode } from "react";
 
 import { beginLogin, initialiseAuth, useAuth } from "../../lib/auth";
+import { STATIC_MODE } from "../../lib/snapshot";
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const auth = useAuth();
 
   useEffect(() => {
-    void initialiseAuth();
+    if (!STATIC_MODE) void initialiseAuth();
   }, []);
+
+  // The published site is a recording with no control plane behind it, so there
+  // is nothing to authenticate against and nothing a session could protect.
+  // Asking a first-time visitor to sign in to read a recording would lose them
+  // at the door.
+  if (STATIC_MODE) return children;
 
   if (auth.status === "dev" || auth.status === "authenticated") return children;
 

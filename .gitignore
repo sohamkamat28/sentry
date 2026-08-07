@@ -55,6 +55,13 @@ sentry/estate/repos/
 Thumbs.db
 .idea/
 *.swp
+.claude/
+
+# Scratch directories left by other tooling inside the design workspace.
+design/.openai/
+design/examples/
+design/worker/
+design/.gitignore
 
 # Superseded prototypes. The design set that matters is the markdown in
 # `design/`; these are the earlier demo apps it was drafted against.
