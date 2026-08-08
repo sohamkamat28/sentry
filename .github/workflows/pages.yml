@@ -48,6 +48,14 @@ jobs:
       - name: Fail if the recording is missing
         run: test -s public/data/snapshot.json
 
+      # A view that reads a route the capture omitted renders
+      # `not in the recording` in place of its content — and only once
+      # published, because a developer with the stack up never sees it. This
+      # reads the routes back out of the source and fails the build instead.
+      - name: Fail if a view reads a route the recording lacks
+        working-directory: sentry
+        run: python3 tools/check_snapshot_routes.py
+
       # VITE_STATIC makes the client read the recording instead of the network.
       # VITE_OIDC_ISSUER is deliberately unset, so the auth gate passes through
       # and a first-time visitor is never asked to sign in to read a recording.

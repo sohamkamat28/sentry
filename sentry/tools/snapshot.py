@@ -53,6 +53,15 @@ ROUTES = [
     "/risk?limit=300",
     "/remediation",
     "/audit?limit=200",
+    # The console asks for these verbatim. The resolver is an exact dictionary
+    # lookup, so a route the UI requests but the capture omits renders as
+    # `not in the recording` on the surface that needs it — which is how the
+    # risk register, the operations leaderboard and the audit chain check were
+    # all silently lost the first time round. Any path a view reads belongs
+    # here; `tools/check_snapshot_routes.py` fails the build when one drifts.
+    "/risk?limit=200",
+    "/operations/leaderboard",
+    "/audit/verify",
 ]
 
 #: Per-endpoint detail, fetched for every endpoint in the register.
@@ -61,6 +70,7 @@ DETAIL = [
     "/classification/{id}",
     "/impact/{id}",
     "/correlation/{id}/ownership",
+    "/forecast/{id}",
 ]
 
 #: Control states worth carrying per endpoint. Stage 10 proposes a control on
