@@ -50,17 +50,9 @@ export function ZeroTrust() {
     <div className="space-y-4">
       <Distribution dist={dist} loading={isLoading} failed={Boolean(error)} />
 
-      <div className="flex flex-wrap gap-2 text-[11.5px]">
-        {CONTROL_ORDER.map((k) => (
-          <span key={k} className="chip">
-            {k} gap {num(data?.gaps?.[k])}
-          </span>
-        ))}
-      </div>
-
       {failure && (
         <div
-          className={`panel px-3 py-2 text-[12px] ${
+          className={`panel px-3 py-2 text-[12.5px] ${
             failure.forbidden ? "border-warn text-warn" : "border-crit text-crit"
           }`}
         >
@@ -84,25 +76,34 @@ export function ZeroTrust() {
             ),
           },
           { key: "pri", header: "priority", align: "right", render: (i) => score(i.priority) },
-          {
-            key: "ctl",
-            header: "controls",
-            render: (i) => (
-              <span className="flex flex-wrap gap-1">
-                {i.controls.map((c) => (
-                  <span
-                    key={c.key}
-                    className={`chip ${c.ok ? "text-ok" : "text-tx3"}`}
-                    title={c.current ? `current: ${c.current}` : undefined}
-                  >
-                    {c.key}
-                    {!c.ok && c.remedy ? ` → ${c.remedy}` : ""}
-                    {c.requires_migration && <span className="text-warn"> ·migration</span>}
-                  </span>
-                ))}
+
+          // One column per control instead of one chip per control per row.
+          //
+          // The chips rendered 220 elements with ten distinct values on this
+          // screen: `binding → dpop ·migration` appeared on all 44 rows. A
+          // value identical in every row is not data, it is a caption — and
+          // because five chips wrapped to two lines, that caption was also
+          // doubling the height of the table. The control names now appear once
+          // as headers, carrying the estate-wide gap count that used to sit in
+          // a separate chip strip above.
+          ...CONTROL_ORDER.map((key) => ({
+            key: `ctl_${key}`,
+            header: (
+              <span className="flex flex-col leading-tight">
+                <span>{key}</span>
+                <span className="font-normal normal-case tracking-normal text-tx4">
+                  {num(data?.gaps?.[key])} gaps
+                </span>
               </span>
             ),
-          },
+            align: "right" as const,
+            render: (i: ZerotrustItemsItem) => {
+              const c = i.controls.find((x) => x.key === key);
+              if (!c) return <span className="text-tx4">—</span>;
+              return <ControlDot control={c} />;
+            },
+          })),
+
           {
             key: "act",
             header: "",
@@ -156,14 +157,49 @@ export function ZeroTrust() {
         }
       >
         {preview.isPending ? (
-          <p className="text-[12px] text-tx4">building a no-write plan…</p>
+          <p className="text-[12.5px] text-tx4">building a no-write plan…</p>
         ) : preview.error ? (
-          <p className="text-[12px] text-crit">{(preview.error as Error).message}</p>
+          <p className="text-[12.5px] text-crit">{(preview.error as Error).message}</p>
         ) : preview.data ? (
           <HardeningPlan data={preview.data} result={harden.data} />
         ) : null}
       </Drawer>
     </div>
+  );
+}
+
+type Control = ZerotrustItemsItem["controls"][number];
+
+/**
+ * One control, as a mark rather than a sentence.
+ *
+ * Held is a filled dot, missing is a hollow one, and a missing control that
+ * would strand callers without a credential gets the warn ring — the
+ * distinction `·migration` used to carry in text on every row. The remedy is
+ * not lost, it moves to the title and to the preview drawer, which is where a
+ * decision is actually made.
+ */
+function ControlDot({ control }: { control: Control }) {
+  const label = control.ok
+    ? `${control.key}: held${control.current ? ` (${control.current})` : ""}`
+    : `${control.key}: missing${control.remedy ? ` — apply ${control.remedy}` : ""}${
+        control.requires_migration ? " (requires caller migration)" : ""
+      }`;
+
+  return (
+    <span className="inline-flex items-center justify-end" title={label}>
+      <span className="sr-only">{label}</span>
+      <span
+        aria-hidden="true"
+        className={`inline-block h-2.5 w-2.5 rounded-full ${
+          control.ok
+            ? "bg-ok"
+            : control.requires_migration
+              ? "border-2 border-warn"
+              : "border-2 border-crit"
+        }`}
+      />
+    </span>
   );
 }
 
@@ -185,12 +221,12 @@ function HardeningPlan({
 
       <Section title="controls that would be judged">
         {proposed.length === 0 ? (
-          <p className="text-[12px] text-ok">no control gaps remain</p>
+          <p className="text-[12.5px] text-ok">no control gaps remain</p>
         ) : (
           <div className="space-y-2">
             {proposed.map((item, index) => (
               <div className="panel px-3 py-2" key={`${String(item.control)}:${index}`}>
-                <div className="text-[12px] text-tx1">{String(item.control ?? "control")}</div>
+                <div className="text-[12.5px] text-tx1">{String(item.control ?? "control")}</div>
                 <div className="mt-0.5 text-[11px] text-tx3">{String(item.remedy ?? "—")}</div>
                 {item.requires_migration === true ? (
                   <div className="mt-1 text-[11px] text-warn">caller migration required</div>
@@ -201,10 +237,10 @@ function HardeningPlan({
         )}
       </Section>
 
-      {data.blocked ? <p className="panel border-warn px-3 py-2 text-[12px] text-warn">{data.blocked}</p> : null}
+      {data.blocked ? <p className="panel border-warn px-3 py-2 text-[12.5px] text-warn">{data.blocked}</p> : null}
       {result ? (
         <Section title="apply result">
-          {result.blocked ? <p className="text-[12px] text-warn">{result.blocked}</p> : null}
+          {result.blocked ? <p className="text-[12.5px] text-warn">{result.blocked}</p> : null}
           {(result.controls ?? []).map((control, index) => (
             <Field
               key={index}
@@ -243,15 +279,15 @@ function Distribution({
   const total = steps.reduce((sum, s) => sum + s.count, 0);
   const tone = (n: number) => (n === 5 ? "bg-ok" : n <= 1 ? "bg-crit" : "bg-warn");
 
-  if (loading) return <p className="text-[12px] text-tx4">loading…</p>;
+  if (loading) return <p className="text-[12.5px] text-tx4">loading…</p>;
   // A failed read is not an estate with no controls.
-  if (failed) return <p className="text-[12px] text-crit">posture distribution unavailable</p>;
-  if (total === 0) return <p className="text-[12px] text-tx4">no endpoint is scored yet</p>;
+  if (failed) return <p className="text-[12.5px] text-crit">posture distribution unavailable</p>;
+  if (total === 0) return <p className="text-[12.5px] text-tx4">no endpoint is scored yet</p>;
 
   return (
     <section aria-label="Controls held across the estate">
       <div className="mb-1.5 flex items-baseline gap-2 font-sans">
-        <h2 className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-tx3">
+        <h2 className="text-[11px] font-medium uppercase tracking-[0.12em] text-tx3">
           Controls held
         </h2>
         <span className="num text-[11px] text-tx4">{total} endpoints</span>

@@ -111,7 +111,7 @@ export function Door() {
           <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:items-center">
             <button
               type="button"
-              className="btn-primary justify-center px-5 py-2.5 text-[13px]"
+              className="btn-primary justify-center px-5 py-2.5 text-[12.5px]"
               onClick={() => {
                 setOpen(false);
                 startTour();
@@ -121,7 +121,7 @@ export function Door() {
             </button>
             <button
               type="button"
-              className="btn justify-center px-5 py-2.5 text-[13px]"
+              className="btn justify-center px-5 py-2.5 text-[12.5px]"
               onClick={dismiss}
             >
               I&rsquo;ll look around myself

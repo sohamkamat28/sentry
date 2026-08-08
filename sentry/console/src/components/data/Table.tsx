@@ -2,7 +2,12 @@ import type { ReactNode } from "react";
 
 export interface Column<T> {
   key: string;
-  header: string;
+  /**
+   * A node, not just a string, so a header can carry the count that would
+   * otherwise be repeated in every cell beneath it — "ratelimit · 39 gaps"
+   * said once instead of a chip on all 44 rows.
+   */
+  header: ReactNode;
   render: (row: T) => ReactNode;
   align?: "left" | "right";
   width?: string;

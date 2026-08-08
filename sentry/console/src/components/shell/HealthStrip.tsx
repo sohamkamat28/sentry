@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { healthTone, toneText } from "../../lib/severity";
 import { LIVE_MS, useLive } from "../../lib/useLive";
 import type { Live } from "../../lib/api-types";
@@ -15,21 +17,31 @@ import type { Live } from "../../lib/api-types";
  * wrote. A sensor that reports healthy while capturing nothing is the failure
  * this product exists to catch, and it must not be able to hide behind its own
  * status field.
+ *
+ * It used to own a second full-width band under the live bar, five pills wide,
+ * on every screen — and four of those five were green almost always. Permanent
+ * is not the same as loud. What is wrong stays named and in place; what is fine
+ * collapses to a count that opens on click.
  */
-export function HealthStrip() {
+export function Health() {
+  const [open, setOpen] = useState(false);
   const { data, error } = useLive<Live>("live", "/live", LIVE_MS);
 
   if (error) {
-    return (
-      <div className="flex items-center gap-2 border-b border-line bg-panel px-3 py-1 text-[11px] text-crit">
-        control plane unreachable — component health unknown
-      </div>
-    );
+    return <span className="shrink-0 text-crit">component health unknown</span>;
   }
 
+  const all = data?.health ?? [];
+  if (all.length === 0) return null;
+
+  const degraded = all.filter((h) => h.state !== "ok");
+  const healthy = all.length - degraded.length;
+  // Anything not ok is always drawn. Only the green ones are ever folded away.
+  const shown = open ? all : degraded;
+
   return (
-    <div className="flex items-center gap-1.5 overflow-x-auto border-b border-line bg-panel px-3 py-1 text-[11px]">
-      {(data?.health ?? []).map((h) => (
+    <span className="flex shrink-0 items-center gap-1.5">
+      {shown.map((h) => (
         <Pill
           key={h.component}
           name={h.component}
@@ -38,12 +50,25 @@ export function HealthStrip() {
         />
       ))}
 
-      {data?.source && (
-        <span className="ml-auto shrink-0 text-tx4" title="which store answered the capture counts">
-          capture via {data.source}
-        </span>
+      {healthy > 0 && (
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          className="chip shrink-0 text-tx3 transition-colors hover:text-tx1"
+          title={
+            open
+              ? "collapse the healthy sources"
+              : `${healthy} source(s) reporting fresh observations${
+                  data?.source ? ` · capture via ${data.source}` : ""
+                }`
+          }
+        >
+          <span className={toneText("ok")}>●</span>
+          {open ? "fewer" : `${healthy} ok`}
+        </button>
       )}
-    </div>
+    </span>
   );
 }
 

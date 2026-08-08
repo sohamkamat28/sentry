@@ -84,7 +84,7 @@ export function Operations() {
           {scan.isPending ? "scanning…" : "run scan now"}
         </button>
         {failure && (
-          <span className={`ml-2 text-[12px] ${failure.forbidden ? "text-warn" : "text-crit"}`}>
+          <span className={`ml-2 text-[12.5px] ${failure.forbidden ? "text-warn" : "text-crit"}`}>
             {failure.forbidden ? `${failure.message} — scan requires analyst` : failure.message}
           </span>
         )}

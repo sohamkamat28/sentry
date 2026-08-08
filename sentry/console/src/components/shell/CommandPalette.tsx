@@ -148,7 +148,7 @@ export function CommandPalette() {
       >
         <input
           ref={inputRef}
-          className="w-full border-b border-line bg-panel px-3 py-2 text-[13px] outline-none placeholder:text-tx4"
+          className="w-full border-b border-line bg-panel px-3 py-2 text-[12.5px] outline-none placeholder:text-tx4"
           placeholder="Search all views…"
           value={q}
           role="combobox"
@@ -175,7 +175,7 @@ export function CommandPalette() {
 
         <div id={listId} className="max-h-[52vh] overflow-y-auto" role="listbox">
           {matches.length === 0 && (
-            <div className="px-3 py-2 text-[12px] text-tx4">nothing matches</div>
+            <div className="px-3 py-2 text-[12.5px] text-tx4">nothing matches</div>
           )}
           {matches.map((c, i) => (
             <button
@@ -192,9 +192,9 @@ export function CommandPalette() {
             >
               <span className="min-w-0">
                 <span className="block text-[12.5px] font-medium">{c.label}</span>
-                <span className="block truncate text-[10.5px] text-tx4">{c.description}</span>
+                <span className="block truncate text-[11px] text-tx4">{c.description}</span>
               </span>
-              <span className="ml-auto text-[10.5px] uppercase tracking-wide text-tx4">
+              <span className="ml-auto text-[11px] uppercase tracking-wide text-tx4">
                 {c.hint}
               </span>
             </button>

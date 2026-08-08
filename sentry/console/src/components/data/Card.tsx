@@ -40,7 +40,7 @@ export function Card({ title, sub, href, action, flush, className = "", children
                 {title}
               </h2>
             )}
-            {sub && <p className="mt-0.5 font-sans text-[11.5px] leading-4 text-tx4">{sub}</p>}
+            {sub && <p className="mt-0.5 font-sans text-[11px] leading-4 text-tx4">{sub}</p>}
           </div>
           {action ??
             (href && (

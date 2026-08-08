@@ -63,12 +63,12 @@ export function Gauge({ value, display, caption, tone = "dim", legend }: Props) 
 
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center pt-3">
           {caption && (
-            <span className="font-sans text-[10.5px] uppercase tracking-[0.1em] text-tx4">
+            <span className="font-sans text-[11px] uppercase tracking-[0.1em] text-tx4">
               {caption}
             </span>
           )}
           <span
-            className="num font-mono text-[26px] leading-tight"
+            className="num font-mono text-[28px] leading-tight"
             style={{ color: known ? TONE[tone] : "rgb(var(--tx3))" }}
           >
             {known ? (display ?? `${Math.round(pct)}%`) : "—"}

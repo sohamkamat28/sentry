@@ -61,7 +61,7 @@ export function EstateRegister() {
       render: (e) => (
         <span className="block">
           {e.service}
-          {e.team ? <span className="block text-[10.5px] text-tx4">{e.team}</span> : null}
+          {e.team ? <span className="block text-[11px] text-tx4">{e.team}</span> : null}
         </span>
       ),
     },
@@ -112,7 +112,7 @@ export function EstateRegister() {
           </span>
           {e.data_classes.length > 0 ? (
             <span
-              className="mt-0.5 block whitespace-nowrap text-[10.5px] leading-tight text-warn"
+              className="mt-0.5 block whitespace-nowrap text-[11px] leading-tight text-warn"
               title={e.data_classes.join(", ")}
             >
               {e.data_classes[0]}
@@ -129,7 +129,7 @@ export function EstateRegister() {
   return (
     <div className="space-y-2">
       {(lifecycle || governance || endpoint) && (
-        <div className="flex items-center gap-2 text-[11.5px]">
+        <div className="flex items-center gap-2 text-[11px]">
           {lifecycle && <span className="chip">lifecycle {lifecycle}</span>}
           {governance && <span className="chip">governance {governance}</span>}
           {endpoint && <span className="chip">endpoint {endpoint}</span>}
@@ -164,8 +164,8 @@ export function EstateRegister() {
           ) : undefined
         }
       >
-        {detail.isLoading ? <p className="text-[12px] text-tx4">loading…</p> : null}
-        {detail.error ? <p className="text-[12px] text-crit">{detail.error.message}</p> : null}
+        {detail.isLoading ? <p className="text-[12.5px] text-tx4">loading…</p> : null}
+        {detail.error ? <p className="text-[12.5px] text-crit">{detail.error.message}</p> : null}
         {detail.data ? <EstateDetail endpoint={detail.data} /> : null}
       </Drawer>
     </div>

@@ -2,7 +2,6 @@ import { useEffect } from "react";
 
 import { Nav } from "./components/shell/Nav";
 import { LiveBar } from "./components/shell/LiveBar";
-import { HealthStrip } from "./components/shell/HealthStrip";
 import { CommandPalette } from "./components/shell/CommandPalette";
 import { Door } from "./components/shell/Door";
 import { Tour } from "./components/shell/Tour";
@@ -38,14 +37,13 @@ export function App() {
     <div className="flex min-h-dvh flex-col md:h-dvh md:flex-row">
       <a
         href="#main-content"
-        className="fixed left-3 top-3 z-50 -translate-y-20 rounded-sm bg-info px-3 py-2 font-sans text-[12px] font-semibold text-bg transition-transform focus:translate-y-0"
+        className="fixed left-3 top-3 z-50 -translate-y-20 rounded-sm bg-info px-3 py-2 font-sans text-[12.5px] font-semibold text-bg transition-transform focus:translate-y-0"
       >
         Skip to content
       </a>
       <Nav path={path} />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <LiveBar />
-        <HealthStrip />
         <main id="main-content" tabIndex={-1} className={`min-h-0 flex-1 ${fullBleed ? "overflow-y-auto p-2.5 md:overflow-hidden md:p-4" : "overflow-y-auto p-3.5 md:p-6"}`}>
           {View ? (
             fullBleed ? (
@@ -55,14 +53,18 @@ export function App() {
               </>
             ) : (
               <>
+                {/* Five type steps, estate-wide: 28 / 20 / 14 / 12.5 / 11.
+                    The header used to contribute three sizes of its own —
+                    10.5, 13 and 26 — each appearing exactly once per screen,
+                    which is how a four-step scale became eleven. */}
                 <header className="mb-5 font-sans">
-                  <div className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-accent">
+                  <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
                     {area?.label}
                   </div>
-                  <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.025em] text-tx1">
+                  <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.025em] text-tx1">
                     {surface.label}
                   </h1>
-                  <p className="mt-1 max-w-[65ch] text-[13px] leading-5 text-tx3">
+                  <p className="mt-1 max-w-[65ch] text-[12.5px] leading-5 text-tx3">
                     {surface.description}
                   </p>
                 </header>
@@ -72,8 +74,8 @@ export function App() {
           ) : (
             <div className="panel max-w-lg p-5 font-sans">
               <h1 className="text-[18px] font-semibold text-tx1">View not found</h1>
-              <p className="mt-1 text-[12px] text-tx3">There is no console view at {routePath(path)}.</p>
-              <a className="mt-4 inline-block text-[12px] text-accent hover:underline" href="#/">
+              <p className="mt-1 text-[12.5px] text-tx3">There is no console view at {routePath(path)}.</p>
+              <a className="mt-4 inline-block text-[12.5px] text-accent hover:underline" href="#/">
                 Return to the work queue
               </a>
             </div>

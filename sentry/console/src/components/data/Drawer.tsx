@@ -88,8 +88,8 @@ export function Drawer({
       >
         <header className="flex items-start gap-3 border-b border-line px-4 py-2.5">
           <div className="min-w-0">
-            <div id={titleId} className="truncate text-[13px] text-tx1">{title}</div>
-            {subtitle && <div className="mt-0.5 text-[11.5px] text-tx3">{subtitle}</div>}
+            <div id={titleId} className="truncate text-[12.5px] text-tx1">{title}</div>
+            {subtitle && <div className="mt-0.5 text-[11px] text-tx3">{subtitle}</div>}
           </div>
           <button
             ref={closeRef}
@@ -117,7 +117,7 @@ export function Drawer({
 export function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="mb-4">
-      <h3 className="mb-1.5 text-[10.5px] uppercase tracking-wider text-tx3">{title}</h3>
+      <h3 className="mb-1.5 text-[11px] uppercase tracking-wider text-tx3">{title}</h3>
       {children}
     </section>
   );
@@ -127,8 +127,8 @@ export function Section({ title, children }: { title: string; children: ReactNod
 export function Field({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex items-baseline gap-3 border-b border-line/60 py-1 last:border-0">
-      <span className="w-40 shrink-0 text-[11.5px] text-tx4">{label}</span>
-      <span className="min-w-0 flex-1 text-[12px] text-tx1">{value ?? "—"}</span>
+      <span className="w-40 shrink-0 text-[11px] text-tx4">{label}</span>
+      <span className="min-w-0 flex-1 text-[12.5px] text-tx1">{value ?? "—"}</span>
     </div>
   );
 }

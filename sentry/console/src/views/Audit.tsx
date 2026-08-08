@@ -18,10 +18,26 @@ import { num, shortId, vday, when } from "../lib/format";
  * a tamper-evident log nobody checks is a log, and the whole value of the chain
  * is in the check having been run.
  */
+/**
+ * How many rows arrive before the reader asks for more.
+ *
+ * The ledger returns two hundred and the table rendered all of them, so the
+ * screen was a two-hundred-row scroll with no control over it. The chain's
+ * integrity is asserted by the verify metric above, which covers every entry
+ * whether or not it is drawn; the table is for reading recent activity, and
+ * nobody reads the two-hundredth row on the way there.
+ */
+const PAGE = 25;
+
 export function Audit() {
   const [open, setOpen] = useState<Entry | null>(null);
+  const [shown, setShown] = useState(PAGE);
   const entries = useLive<AuditResponse>("audit", "/audit?limit=200", SLOW_MS);
   const verify = useLive<Verify>("audit-verify", "/audit/verify", SLOW_MS);
+
+  const all = entries.data?.items ?? [];
+  const page = all.slice(0, shown);
+  const more = all.length - page.length;
 
   return (
     <div className="space-y-4">
@@ -48,10 +64,10 @@ export function Audit() {
         />
         <Metric
           label="Shown"
-          value={entries.isLoading || entries.error ? undefined : entries.data?.items.length}
+          value={entries.isLoading || entries.error ? undefined : page.length}
           loading={entries.isLoading}
           error={entries.error}
-          sub="most recent first"
+          sub={more > 0 ? `most recent of ${num(all.length)} read` : "most recent first"}
         />
       </div>
 
@@ -69,13 +85,23 @@ export function Audit() {
             render: (e) => <span className="text-tx4">{shortId(e.entry_hash, 12)}</span>,
           },
         ]}
-        rows={entries.data?.items}
+        rows={entries.isLoading ? undefined : page}
         rowKey={(e) => String(e.seq)}
         loading={entries.isLoading}
         error={entries.error as Error | null}
         onRowClick={setOpen}
         rowLabel={(entry) => `audit entry ${entry.seq}: ${entry.action}`}
       />
+
+      {more > 0 && (
+        <button
+          type="button"
+          className="btn w-full justify-center"
+          onClick={() => setShown((n) => n + PAGE)}
+        >
+          Show {Math.min(PAGE, more)} more · {num(more)} older {more === 1 ? "entry" : "entries"} read
+        </button>
+      )}
 
       <Drawer
         open={open !== null}
@@ -94,7 +120,7 @@ export function Audit() {
             </Section>
             <Section title="detail">
               {Object.keys(open.detail).length === 0 ? (
-                <p className="text-[12px] text-tx4">no additional detail</p>
+                <p className="text-[12.5px] text-tx4">no additional detail</p>
               ) : (
                 <pre className="overflow-x-auto whitespace-pre-wrap break-words text-[11px] text-tx2">
                   {JSON.stringify(open.detail, null, 2)}

@@ -52,7 +52,7 @@ export function Decommission() {
 
   return (
     <div className="space-y-3">
-      <div className="flex gap-2 text-[11.5px]">
+      <div className="flex gap-2 text-[11px]">
         {Object.entries(data?.by_phase ?? {}).map(([p, n]) => (
           <span key={p} className={`chip ${PHASE_TONE[p] ?? ""}`}>
             {p} {num(n)}
@@ -62,7 +62,7 @@ export function Decommission() {
 
       {failure && (
         <div
-          className={`panel px-3 py-2 text-[12px] ${
+          className={`panel px-3 py-2 text-[12.5px] ${
             failure.forbidden ? "border-warn text-warn" : "border-crit text-crit"
           }`}
         >
@@ -86,7 +86,7 @@ export function Decommission() {
                 {i.phase}
                 {i.hold && <span className="text-warn"> ·held</span>}
                 {(i.express || i.canary) && (
-                  <span className="ml-1 text-[10.5px] text-tx4">
+                  <span className="ml-1 text-[11px] text-tx4">
                     {i.express ? "express" : "canary"}
                   </span>
                 )}

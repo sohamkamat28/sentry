@@ -45,7 +45,7 @@ export function SensorGrid() {
       </div>
 
       {data && !data.shadow_reliable && (
-        <div className="panel border-crit px-3 py-2 text-[12px] text-crit">
+        <div className="panel border-crit px-3 py-2 text-[12.5px] text-crit">
           gateway unreachable — shadow is withheld, not zero
         </div>
       )}

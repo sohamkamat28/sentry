@@ -90,7 +90,7 @@
   body {
     background: rgb(var(--bg));
     color: rgb(var(--tx1));
-    @apply font-sans text-[13px] antialiased;
+    @apply font-sans text-[12.5px] antialiased;
   }
   /* Two very low-alpha radials, fixed so they do not travel with a scrolling
      table. `z-index: -1` puts them above the body's own background and below
@@ -146,7 +146,7 @@
     @apply px-3.5 py-2 border-b border-line/70 align-top font-mono text-[12.5px];
   }
   .th {
-    @apply px-3.5 py-2 text-left text-[10.5px] uppercase tracking-[0.08em] text-tx4
+    @apply px-3.5 py-2 text-left text-[11px] uppercase tracking-[0.08em] text-tx4
            border-b border-line font-sans font-medium sticky top-0 bg-panel z-10;
   }
   .panel {
@@ -164,13 +164,13 @@
   }
   .btn {
     @apply inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-line
-           bg-raise px-3 py-1.5 font-sans text-[12px] transition duration-200
+           bg-raise px-3 py-1.5 font-sans text-[12.5px] transition duration-200
            hover:border-tx4 hover:text-tx1 active:translate-y-px
            disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-line;
   }
   .btn-primary {
     @apply inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-accent
-           bg-accent px-3.5 py-1.5 font-sans text-[12px] font-medium text-[rgb(var(--accent-tx))]
+           bg-accent px-3.5 py-1.5 font-sans text-[12.5px] font-medium text-[rgb(var(--accent-tx))]
            transition duration-200 hover:brightness-110 active:translate-y-px
            disabled:cursor-not-allowed disabled:opacity-40;
   }

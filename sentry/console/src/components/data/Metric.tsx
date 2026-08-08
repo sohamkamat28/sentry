@@ -50,7 +50,7 @@ export function Metric({ value, label, sub, tone = "dim", loading, error, degrad
         {label}
       </div>
       <div
-        className="num mt-1.5 font-mono text-[30px] font-medium leading-none tracking-[-0.02em]"
+        className="num mt-1.5 font-mono text-[28px] font-medium leading-none tracking-[-0.02em]"
         style={{ color: failed ? TONE.crit : pending ? TONE.dim : TONE[tone] }}
         aria-busy={(loading && !failed) || undefined}
       >

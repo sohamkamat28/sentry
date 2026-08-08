@@ -183,7 +183,7 @@ export function Triage() {
       {/* ── queue ─────────────────────────────────────────────────────── */}
       <div className="panel flex min-h-[300px] flex-col lg:min-h-0">
         <div className="flex items-center gap-1.5 border-b border-line px-2.5 py-1.5">
-          <span className="text-[10.5px] uppercase tracking-wider text-tx3">queue</span>
+          <span className="text-[11px] uppercase tracking-wider text-tx3">queue</span>
           <span className="num text-[11px] text-tx4">{visible.length}</span>
           <span className="ml-auto flex gap-1">
             {(Object.keys(KIND_LABEL) as Kind[]).map((k) => (
@@ -206,12 +206,12 @@ export function Triage() {
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto">
-          {loading && <p className="px-3 py-2 text-[12px] text-tx4">loading…</p>}
+          {loading && <p className="px-3 py-2 text-[12.5px] text-tx4">loading…</p>}
           {!loading && failed && (
-            <p className="px-3 py-2 text-[12px] text-crit">{(failed as Error).message}</p>
+            <p className="px-3 py-2 text-[12.5px] text-crit">{(failed as Error).message}</p>
           )}
           {!loading && !failed && visible.length === 0 && (
-            <p className="px-3 py-2 text-[12px] text-tx4">
+            <p className="px-3 py-2 text-[12.5px] text-tx4">
               nothing above the action threshold
             </p>
           )}
@@ -229,7 +229,7 @@ export function Triage() {
               >
                 <div className="flex items-baseline gap-2">
                   <span className={`text-[11px] ${toneText(tierTone(r.tier))}`}>●</span>
-                  <span className="truncate text-[12px] text-tx1">
+                  <span className="truncate text-[12.5px] text-tx1">
                     {r.method} {r.path}
                   </span>
                   {r.breachDays !== null && (
@@ -245,14 +245,14 @@ export function Triage() {
                 </div>
                 <div className="mt-0.5 flex items-baseline gap-2 pl-[18px]">
                   <span className="text-[11px] text-tx2">{r.headline}</span>
-                  <span className="truncate text-[10.5px] text-tx4">{r.detail}</span>
+                  <span className="truncate text-[11px] text-tx4">{r.detail}</span>
                 </div>
               </button>
             );
           })}
         </div>
 
-        <div className="border-t border-line px-2.5 py-1 text-[10.5px] text-tx4">
+        <div className="border-t border-line px-2.5 py-1 text-[11px] text-tx4">
           j / k to move · ⌘K to jump
         </div>
       </div>
@@ -262,7 +262,7 @@ export function Triage() {
         {current ? (
           <Evidence row={current} />
         ) : (
-          <p className="px-3 py-2 text-[12px] text-tx4">select an item</p>
+          <p className="px-3 py-2 text-[12.5px] text-tx4">select an item</p>
         )}
       </div>
     </div>
@@ -298,7 +298,7 @@ function Evidence({ row }: { row: Row }) {
   return (
     <div className="px-3 py-2.5">
       {[cls.error, impact.error, own.error, risk.error].some(Boolean) ? (
-        <div className="mb-3 space-y-1 panel border-crit px-3 py-2 text-[11.5px] text-crit">
+        <div className="mb-3 space-y-1 panel border-crit px-3 py-2 text-[11px] text-crit">
           {([
             ["classification", cls.error],
             ["blast radius", impact.error],
@@ -310,7 +310,7 @@ function Evidence({ row }: { row: Row }) {
         </div>
       ) : null}
       <div className="mb-3">
-        <div className="text-[13px] text-tx1">
+        <div className="text-[12.5px] text-tx1">
           {row.method} {row.path}
         </div>
         <div className="mt-0.5 flex items-center gap-2 text-[11px]">
@@ -324,7 +324,7 @@ function Evidence({ row }: { row: Row }) {
           <span className="text-tx4">·</span>
           <span className="text-tx3">{cls.data?.confidence ?? "—"}</span>
           <button
-            className="ml-auto text-[10.5px] text-info hover:underline"
+            className="ml-auto text-[11px] text-info hover:underline"
             type="button"
             onClick={() => navigate(`/estate?endpoint=${row.endpointId}`)}
           >
@@ -340,7 +340,7 @@ function Evidence({ row }: { row: Row }) {
             .sort((a, b) => b.contribution - a.contribution)
             .map((p) => (
               <div key={p.key} className="flex items-baseline gap-2 py-0.5">
-                <span className="w-44 shrink-0 truncate text-[11.5px] text-tx2">
+                <span className="w-44 shrink-0 truncate text-[11px] text-tx2">
                   {p.label}
                 </span>
                 {/* The bar is the contribution, so the eye ranks the causes in
@@ -357,7 +357,7 @@ function Evidence({ row }: { row: Row }) {
                 <span className="num w-14 shrink-0 text-right text-[11px] text-tx3">
                   {score(p.contribution)}
                 </span>
-                <span className="num w-12 shrink-0 text-right text-[10.5px] text-tx4">
+                <span className="num w-12 shrink-0 text-right text-[11px] text-tx4">
                   ×{p.w}
                 </span>
               </div>
@@ -367,7 +367,7 @@ function Evidence({ row }: { row: Row }) {
 
       <Section title="how it was classified">
         {(cls.data?.trace ?? []).length === 0 ? (
-          <p className="text-[11.5px] text-tx4">no trace recorded</p>
+          <p className="text-[11px] text-tx4">no trace recorded</p>
         ) : (
           /* Two shapes, not one. The engine records the questions it asked
              (`q`/`question`/`answer`/`source`) and then the rules it applied
@@ -378,7 +378,7 @@ function Evidence({ row }: { row: Row }) {
             "rule" in t ? (
               <div
                 key={i}
-                className="flex items-baseline gap-2 border-t border-line/60 py-0.5 text-[11.5px] first:border-0"
+                className="flex items-baseline gap-2 border-t border-line/60 py-0.5 text-[11px] first:border-0"
               >
                 <span className="w-6 shrink-0 text-tx4">→</span>
                 <span className="shrink-0 text-tx3">{t.rule}</span>
@@ -388,12 +388,12 @@ function Evidence({ row }: { row: Row }) {
                 <span className="shrink-0 text-tx1">{String(t.result)}</span>
               </div>
             ) : (
-              <div key={i} className="flex items-baseline gap-2 py-0.5 text-[11.5px]">
+              <div key={i} className="flex items-baseline gap-2 py-0.5 text-[11px]">
                 <span className="w-6 shrink-0 text-tx4">{t.q}</span>
                 <span className="flex-1 text-tx2">{t.question}</span>
                 <span className="shrink-0 text-tx1">{String(t.answer)}</span>
                 <span
-                  className="w-28 shrink-0 truncate text-right text-[10.5px] text-tx4"
+                  className="w-28 shrink-0 truncate text-right text-[11px] text-tx4"
                   title={t.source}
                 >
                   {t.source}

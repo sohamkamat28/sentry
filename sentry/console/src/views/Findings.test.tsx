@@ -28,9 +28,25 @@ vi.mock("../lib/useLive", () => ({
 import { Findings } from "./Findings";
 
 describe("Findings", () => {
-  it("renders framework names rather than object coercions", () => {
+  // The framework names moved out of the cell and into its title: seven
+  // distinct values across forty-eight rows, clamped in every one, cost a fifth
+  // of the table's width to show a prefix. The column now carries how many
+  // clauses were breached out of how many checked, which varies per row.
+  //
+  // The original point of this test survives the move — the citations are
+  // objects, and rendering the array anywhere would print `[object Object]`.
+  it("names frameworks rather than coercing the citation objects", () => {
     render(<Findings />);
-    expect(screen.getByText("SOC 2, ISO 27001")).toBeTruthy();
+    const cell = screen.getByTitle("2 framework(s): SOC 2, ISO 27001");
+    expect(cell).toBeTruthy();
+    expect(cell.textContent).toBe("2 of 2");
     expect(screen.queryByText(/\[object Object\]/)).toBeNull();
+  });
+
+  it("keeps the estimate sentence when no time-to-breach column carries it", () => {
+    // `time_to_breach_d` is absent in this fixture, so the lead clause is the
+    // only place the figure appears and must not be stripped.
+    render(<Findings />);
+    expect(screen.getByTitle("Sensitive response")).toBeTruthy();
   });
 });

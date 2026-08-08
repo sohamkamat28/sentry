@@ -19,7 +19,7 @@ export function Behaviour() {
   return (
     <div className="space-y-4">
       {data && !data.fitted && (
-        <div className="panel border-warn px-3 py-2 text-[12px] text-warn">
+        <div className="panel border-warn px-3 py-2 text-[12.5px] text-warn">
           {data.withheld}
         </div>
       )}

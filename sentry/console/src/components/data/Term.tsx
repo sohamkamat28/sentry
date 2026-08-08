@@ -76,7 +76,7 @@ export function Term({ children, as }: { children: string; as?: string }) {
           role="tooltip"
           className="absolute bottom-full left-0 z-30 mb-1.5 block w-[min(19rem,70vw)]
                      rounded-[var(--radius-control)] border border-line bg-panel px-3 py-2
-                     text-left font-sans text-[12px] font-normal normal-case leading-5
+                     text-left font-sans text-[12.5px] font-normal normal-case leading-5
                      tracking-normal text-tx2 shadow-xl"
         >
           {definition}

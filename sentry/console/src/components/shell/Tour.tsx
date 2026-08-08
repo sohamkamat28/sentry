@@ -37,13 +37,13 @@ export function Tour() {
       className="fixed bottom-3 right-3 z-40 w-[min(27rem,calc(100vw-1.5rem))] rounded-[var(--radius-card)] border border-accent/40 bg-panel p-4 shadow-2xl sm:bottom-4 sm:right-4"
     >
       <div className="flex items-center justify-between gap-3">
-        <span className="font-sans text-[10.5px] font-semibold uppercase tracking-[0.14em] text-accent">
+        <span className="font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
           Guided tour · {index + 1} of {TOUR_STEPS.length}
         </span>
         <button
           type="button"
           onClick={endTour}
-          className="font-sans text-[11.5px] text-tx4 transition-colors hover:text-tx1"
+          className="font-sans text-[11px] text-tx4 transition-colors hover:text-tx1"
         >
           Skip
         </button>

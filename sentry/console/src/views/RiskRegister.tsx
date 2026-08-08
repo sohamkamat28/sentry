@@ -26,7 +26,7 @@ export function RiskRegister() {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2 text-[11.5px]">
+      <div className="flex gap-2 text-[11px]">
         {counts.map((c) => (
           <span key={c.tier} className={`chip ${tierClass(c.tier)}`}>
             {c.tier} {num(c.n)}

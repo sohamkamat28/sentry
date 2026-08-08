@@ -10,6 +10,7 @@ import {
 } from "../../lib/auth";
 import { num, score, vday } from "../../lib/format";
 import { STATIC_MODE, capturedAt } from "../../lib/snapshot";
+import { Health } from "./HealthStrip";
 import { LIVE_MS, freshness, togglePaused, useLive, usePaused } from "../../lib/useLive";
 import type { Live, System } from "../../lib/api-types";
 
@@ -40,7 +41,7 @@ export function LiveBar() {
   const blind = live.data?.source === "unavailable";
 
   return (
-    <div className="flex shrink-0 items-center gap-4 overflow-x-auto border-b border-line bg-panel/60 px-4 py-2 text-[11.5px] backdrop-blur">
+    <div className="flex shrink-0 items-center gap-4 overflow-x-auto border-b border-line bg-panel/60 px-4 py-2 text-[11px] backdrop-blur">
       <Item label="vday" value={vday(live.data?.vday ?? system.data?.vday)} />
       <Item label="endpoints" value={num(system.data?.endpoints)} />
       <Item
@@ -68,6 +69,12 @@ export function LiveBar() {
       {live.error && (
         <span className="text-crit">control plane unreachable — figures are stale</span>
       )}
+
+      {/* Component health used to own a second full-width band beneath this
+          one, on every screen, five pills wide and four of them green. It is
+          the same information in the same place, folded to what is actually
+          wrong plus a count of what is not. */}
+      <Health />
 
       <span className="ml-auto flex items-center gap-3">
         {live.data?.pipeline?.running && (
@@ -120,7 +127,7 @@ export function LiveBar() {
             <span className="text-tx4">role</span>
             <select
               aria-label="development role"
-              className="border border-line bg-bg px-1.5 py-0.5 text-[11.5px]"
+              className="border border-line bg-bg px-1.5 py-0.5 text-[11px]"
               value={getDevToken()}
               onChange={(e) => {
                 setDevToken(e.target.value);

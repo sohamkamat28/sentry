@@ -181,8 +181,8 @@ function Detail({ item }: { item: ForecastItemsItem }) {
     queryFn: () => get<ForecastEndpointId>(`/forecast/${item.endpoint_id}`),
   });
 
-  if (isLoading) return <p className="text-[12px] text-tx4">loading…</p>;
-  if (error) return <p className="text-[12px] text-crit">{(error as Error).message}</p>;
+  if (isLoading) return <p className="text-[12.5px] text-tx4">loading…</p>;
+  if (error) return <p className="text-[12.5px] text-crit">{(error as Error).message}</p>;
 
   const observed = data?.observed ?? [];
   const adjusted = data?.adjusted ?? [];
@@ -252,7 +252,7 @@ function Line({
 }) {
   return (
     <div className="flex items-center gap-3 py-1">
-      <span className="w-32 shrink-0 text-[11.5px] text-tx3">{label}</span>
+      <span className="w-32 shrink-0 text-[11px] text-tx3">{label}</span>
       <Sparkline values={values} width={220} height={26} min={lo} max={hi} tone={tone} />
       <span className="num ml-auto text-[11px] text-tx4">
         {values.length ? `${values.length} pts` : "—"}

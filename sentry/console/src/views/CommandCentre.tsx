@@ -169,7 +169,7 @@ export function CommandCentre() {
           <div className="flex h-[132px] items-stretch gap-2.5">
             {tierCounts.map((t) => (
               <div key={t.tier} className="flex min-w-0 flex-1 flex-col items-center gap-2">
-                <span className="num font-mono text-[13px] text-tx2">
+                <span className="num font-mono text-[12.5px] text-tx2">
                   {t.n === undefined ? "—" : t.n}
                 </span>
                 {/* The bar is positioned, not flowed. A percentage height
@@ -186,7 +186,7 @@ export function CommandCentre() {
                     }}
                   />
                 </div>
-                <span className="truncate font-sans text-[10px] uppercase tracking-[0.06em] text-tx4">
+                <span className="truncate font-sans text-[11px] uppercase tracking-[0.06em] text-tx4">
                   {t.tier}
                 </span>
               </div>
@@ -236,16 +236,16 @@ export function CommandCentre() {
         </Card>
 
         <Card title="Capture by source" sub="which sensor saw what" href="#/sensor">
-          {disc.isLoading && <p className="font-sans text-[12px] text-tx4">loading…</p>}
+          {disc.isLoading && <p className="font-sans text-[12.5px] text-tx4">loading…</p>}
           {disc.error && (
-            <p className="font-sans text-[12px] text-crit">{(disc.error as Error).message}</p>
+            <p className="font-sans text-[12.5px] text-crit">{(disc.error as Error).message}</p>
           )}
           {!disc.isLoading && !disc.error && (
             <ul className="space-y-2.5">
               {sources.map((s) => (
                 <li key={s.source}>
                   <div className="flex items-baseline justify-between gap-2">
-                    <span className="font-sans text-[12px] text-tx2">
+                    <span className="font-sans text-[12.5px] text-tx2">
                       {s.source.toUpperCase()}
                     </span>
                     <span className="flex items-baseline gap-2">
@@ -253,7 +253,7 @@ export function CommandCentre() {
                         {num(s.endpoints)}
                       </span>
                       {!s.healthy && (
-                        <span className="font-sans text-[10.5px] text-crit">unreachable</span>
+                        <span className="font-sans text-[11px] text-crit">unreachable</span>
                       )}
                     </span>
                   </div>
@@ -266,7 +266,7 @@ export function CommandCentre() {
                       }}
                     />
                   </div>
-                  <div className="mt-1 font-sans text-[10.5px] text-tx4">
+                  <div className="mt-1 font-sans text-[11px] text-tx4">
                     {num(s.exclusive)} seen only here
                   </div>
                 </li>
@@ -356,7 +356,7 @@ function Spotlight({
         }}
       />
       <span className="chip w-fit border-accent/40 text-accent">Estate</span>
-      <p className="mt-3 font-sans text-[19px] font-semibold leading-[1.28] tracking-[-0.02em] text-tx1">
+      <p className="mt-3 font-sans text-[20px] font-semibold leading-[1.28] tracking-[-0.02em] text-tx1">
         {known ? (
           <>
             <span className="num font-mono">{shadow}</span> of{" "}
@@ -367,7 +367,7 @@ function Spotlight({
           "Reading the estate…"
         )}
       </p>
-      <p className="mt-1.5 font-sans text-[11.5px] leading-4 text-tx4">
+      <p className="mt-1.5 font-sans text-[11px] leading-4 text-tx4">
         {degraded
           ? "The gateway comparison is degraded — this may undercount."
           : "Seen in live traffic by the kernel probe, registered nowhere."}

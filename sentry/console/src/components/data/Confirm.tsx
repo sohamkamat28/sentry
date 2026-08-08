@@ -57,7 +57,7 @@ export function Confirm({
         <div
           className={`panel px-3 py-2 ${destructive ? "border-crit" : "border-warn"}`}
         >
-          <div className="mb-2 text-[12px] text-tx1">{question}</div>
+          <div className="mb-2 text-[12.5px] text-tx1">{question}</div>
           <div className="flex items-center gap-2">
             <button
               className={`btn ${destructive ? "text-crit" : "text-warn"}`}
@@ -78,7 +78,7 @@ export function Confirm({
       )}
 
       {api && (
-        <div className={`text-[11.5px] ${api.forbidden ? "text-warn" : "text-crit"}`}>
+        <div className={`text-[11px] ${api.forbidden ? "text-warn" : "text-crit"}`}>
           {api.forbidden
             ? `${api.message} — gateway writes require the approver role`
             : api.message}
@@ -87,7 +87,7 @@ export function Confirm({
       {/* A ternary, not `&&`: `error` is `unknown`, and an `&&` chain leaves the
           whole expression `unknown` rather than narrowing to an element. */}
       {error != null && !api ? (
-        <div className="text-[11.5px] text-crit">
+        <div className="text-[11px] text-crit">
           {error instanceof Error ? error.message : String(error)}
         </div>
       ) : null}
