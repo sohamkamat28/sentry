@@ -74,12 +74,12 @@ export function Door() {
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(90% 70% at 85% -10%, rgb(var(--accent) / 0.22), transparent 60%)",
+              "radial-gradient(90% 70% at 85% -10%, rgb(var(--accent) / 0.07), transparent 60%)",
           }}
         />
 
         <div className="relative">
-          <span className="chip border-accent/40 text-accent">API lifecycle security</span>
+          <span className="chip border-tx4/50 text-tx2">API lifecycle security</span>
           <h1 className="mt-3.5 font-sans text-[26px] font-semibold leading-[1.15] tracking-[-0.025em] text-tx1 sm:text-[32px]">
             Banks lose track of their own APIs.
           </h1>

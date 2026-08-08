@@ -331,7 +331,7 @@ function Spotlight({
         className="absolute inset-0 -z-10"
         style={{
           background:
-            "radial-gradient(120% 90% at 78% 8%, rgb(var(--accent) / 0.30), transparent 62%)",
+            "radial-gradient(120% 90% at 78% 8%, rgb(var(--accent) / 0.09), transparent 62%)",
         }}
       />
       <div
@@ -345,7 +345,7 @@ function Spotlight({
           WebkitMaskImage: "radial-gradient(120% 90% at 78% 8%, #000, transparent 68%)",
         }}
       />
-      <span className="chip w-fit border-accent/40 text-accent">Estate</span>
+      <span className="chip w-fit border-tx4/50 text-tx2">Estate</span>
       <p className="mt-2.5 font-sans text-[20px] font-semibold leading-[1.22] tracking-[-0.02em] text-tx1">
         {known ? (
           <>

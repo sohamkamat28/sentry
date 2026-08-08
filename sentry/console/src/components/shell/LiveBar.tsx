@@ -76,7 +76,7 @@ export function LiveBar() {
 
       <span className="ml-auto flex items-center gap-3">
         {live.data?.pipeline?.running && (
-          <span className="text-info" title="a pipeline cycle is in flight">
+          <span className="text-tx2" title="a pipeline cycle is in flight">
             ● scan {live.data.pipeline.stages_done}/{live.data.pipeline.stages_total}
           </span>
         )}
@@ -193,7 +193,7 @@ function RecordedChip() {
 
   return (
     <span
-      className="chip border-info text-info"
+      className="chip border-line text-tx2"
       title="a frozen capture of a real run — the control plane is not being polled"
     >
       recorded {at ?? "…"}

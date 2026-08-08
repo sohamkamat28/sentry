@@ -40,7 +40,7 @@ export function App() {
     <div className="flex min-h-dvh flex-col md:h-dvh md:flex-row">
       <a
         href="#main-content"
-        className="fixed left-3 top-3 z-50 -translate-y-20 rounded-sm bg-info px-3 py-2 font-sans text-[12.5px] font-semibold text-bg transition-transform focus:translate-y-0"
+        className="fixed left-3 top-3 z-50 -translate-y-20 rounded-[var(--radius-control)] bg-accent px-3 py-2 font-sans text-[12.5px] font-semibold text-[rgb(var(--accent-tx))] transition-transform focus:translate-y-0"
       >
         Skip to content
       </a>
@@ -78,7 +78,7 @@ export function App() {
                     10.5, 13 and 26 — each appearing exactly once per screen,
                     which is how a four-step scale became eleven. */}
                 <header className="mb-5 font-sans">
-                  <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
+                  <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-tx4">
                     {area?.label}
                   </div>
                   <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.025em] text-tx1">
@@ -95,7 +95,7 @@ export function App() {
             <div className="panel max-w-lg p-5 font-sans">
               <h1 className="text-[18px] font-semibold text-tx1">View not found</h1>
               <p className="mt-1 text-[12.5px] text-tx3">There is no console view at {routePath(path)}.</p>
-              <a className="mt-4 inline-block text-[12.5px] text-accent hover:underline" href="#/">
+              <a className="mt-4 inline-block text-[12.5px] text-tx1 underline underline-offset-4" href="#/">
                 Return to the work queue
               </a>
             </div>

@@ -80,7 +80,7 @@ export function Findings() {
               <span className="block">
                 <span className="block whitespace-nowrap">{`${f.method} ${f.path}`}</span>
                 {f.generator !== "template" ? (
-                  <span className="mt-0.5 inline-block text-[11px] text-info">
+                  <span className="mt-0.5 inline-block text-[11px] text-tx4">
                     {f.generator}
                     {f.model ? ` ${f.model}` : ""}
                   </span>

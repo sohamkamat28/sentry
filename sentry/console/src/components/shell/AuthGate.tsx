@@ -31,7 +31,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
               Authenticate with the configured identity provider to access the control plane.
             </p>
             {auth.error ? <p className="mt-3 text-[12.5px] text-crit">{auth.error}</p> : null}
-            <button className="btn mt-4 text-info" type="button" onClick={() => void beginLogin()}>
+            <button className="btn mt-4" type="button" onClick={() => void beginLogin()}>
               sign in
             </button>
           </>

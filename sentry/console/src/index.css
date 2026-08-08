@@ -13,19 +13,35 @@
  *
  * Stored as `R G B` and consumed through `rgb()` so both the solid and the
  * translucent forms work from one definition. */
+/* Achromatic ground, chromatic signal.
+ *
+ * The interface is built entirely from neutrals. Every hue on the screen is a
+ * severity hue, so a coloured element always means something is wrong, or
+ * notably right — which is the rule stated below and which the previous theme
+ * quietly broke: it had an electric-blue accent, a blue ambient glow and a blue
+ * `info`, three blues competing with the four that carry meaning.
+ *
+ * The ground is neutral rather than navy for the same reason. A blue-black
+ * field tints every grey sitting on it, and the four signal hues then have to
+ * fight a colour cast before they can register at all. */
 :root {
-  --bg: 8 10 18;
-  --panel: 18 23 36;
+  --bg: 10 10 11;
+  --panel: 22 22 24;
   /* One step above panel: hover, selected rows, and the inner wells that hold a
      chart inside a card. Previously every surface borrowed `line` for this and
      a hovered row was indistinguishable from a border. */
-  --raise: 26 32 50;
-  --line: 35 42 61;
+  --raise: 32 32 35;
+  --line: 42 42 46;
 
-  --tx1: 232 235 242; /* primary */
-  --tx2: 178 187 206; /* secondary */
-  --tx3: 133 145 170; /* labels */
-  --tx4: 96 107 133; /* sub-labels, absent values */
+  /* Four steps, all of which clear 4.5:1 on `panel`. The dimmest step used to
+     sit near 2.9:1 — it carries metric sub-labels, chart captions and the em
+     dash that stands for an absent value, none of which are decorative, and
+     all of which were below the floor for small text. Verified in the browser
+     rather than computed by eye. */
+  --tx1: 237 237 238; /* primary */
+  --tx2: 176 176 181; /* secondary */
+  --tx3: 158 158 164; /* labels */
+  --tx4: 132 132 139; /* sub-labels, absent values */
 
   /* Severity is the only thing colour encodes here. Nothing decorative is
      allowed near these four hues, so a red cell always means the same thing. */
@@ -34,49 +50,46 @@
   --crit: 255 92 92;
   --info: 106 169 255;
 
-  /* Interaction, kept deliberately apart from severity.
-     `info` has to stay legible as small text on a dark panel, which caps how
-     saturated it can be. `accent` is only ever a fill — the primary button, a
-     gauge arc, the active nav pill — so it can be the electric blue the rest of
-     the palette cannot afford. Reusing one blue for both made every focus ring
-     read as a severity signal. */
-  --accent: 59 110 246;
-  --accent-tx: 255 255 255; /* text that sits on an accent fill */
+  /* Interaction, deliberately achromatic.
+     `accent` is only ever a fill — the primary button, the active rail item, a
+     focus ring — and on an instrument the loudest available signal is simply
+     light. Making it a colour, any colour, puts a fifth hue on screen that
+     competes with the four that carry meaning. */
+  --accent: 237 237 238;
+  --accent-tx: 12 12 13; /* text that sits on an accent fill */
 
-  --radius-card: 16px;
-  --radius-control: 10px;
-  --radius-pill: 999px;
-
-  /* The ambient wash behind the shell. Kept to a single very low-alpha radial:
-     enough to lift the page off flat black, not enough to tint a severity hue. */
-  --glow: 59 110 246;
-  --glow-alpha: 0.1;
+  /* Rectilinear. A 16px radius is the house style of the dashboards this is
+     not; instruments are drawn with a hairline and a corner. */
+  --radius-card: 4px;
+  --radius-control: 3px;
+  --radius-pill: 3px;
 }
 
 :root[data-theme="light"] {
-  --bg: 240 244 251;
+  --bg: 244 244 245;
   --panel: 255 255 255;
-  --raise: 244 247 252;
-  --line: 224 231 243;
+  --raise: 238 238 240;
+  --line: 217 217 222;
 
-  --tx1: 14 22 41;
-  --tx2: 51 63 88;
-  --tx3: 88 100 127;
-  --tx4: 128 140 166;
+  --tx1: 18 18 20;
+  --tx2: 60 60 66;
+  --tx3: 88 88 96;
+  --tx4: 110 110 118;
 
   /* The dark-theme hues are tuned for light text on a dark panel and fail WCAG
      AA as small text on white. These are the same four meanings, re-picked for
      a light ground rather than reused. */
-  --ok: 13 148 136;
+  /* `ok` is a step darker than the obvious teal: at 13 148 136 it measured
+     3.74:1 on white, under the floor for the 11px labels it marks satisfied
+     controls with. The other three already cleared it. */
+  --ok: 13 118 109;
   --warn: 180 83 9;
   --crit: 220 38 38;
   --info: 37 99 235;
 
-  --accent: 37 99 235;
-  --accent-tx: 255 255 255;
-
-  --glow: 59 110 246;
-  --glow-alpha: 0.08;
+  /* Ink, for the same reason white is used on the dark ground. */
+  --accent: 24 24 27;
+  --accent-tx: 250 250 250;
 }
 
 @layer base {
@@ -92,27 +105,10 @@
     color: rgb(var(--tx1));
     @apply font-sans text-[12.5px] antialiased;
   }
-  /* Two very low-alpha radials, fixed so they do not travel with a scrolling
-     table. `z-index: -1` puts them above the body's own background and below
-     every panel, which is what keeps a card's edge readable against them. */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background:
-      radial-gradient(
-        55rem 38rem at 15% -12%,
-        rgb(var(--glow) / var(--glow-alpha)),
-        transparent 70%
-      ),
-      radial-gradient(
-        45rem 32rem at 105% 5%,
-        rgb(var(--glow) / calc(var(--glow-alpha) * 0.55)),
-        transparent 70%
-      );
-  }
+  /* The ambient blue glow is gone. It was the single most legible marker of the
+     genre this is trying not to be, and a tinted field is exactly what an
+     achromatic ground exists to avoid. */
+
   /* Prose and chrome are sans; data is mono. Endpoint paths, ids and figures
      are scanned down a column rather than read, and a proportional face makes
      `/api/v1/nostro/{id}` and `/api/v1/nostro/{id}/positions` hard to tell

@@ -324,7 +324,7 @@ function Evidence({ row }: { row: Row }) {
           <span className="text-tx4">·</span>
           <span className="text-tx3">{cls.data?.confidence ?? "—"}</span>
           <button
-            className="ml-auto text-[11px] text-info hover:underline"
+            className="ml-auto text-[11px] text-tx2 hover:text-tx1 hover:underline"
             type="button"
             onClick={() => navigate(`/estate?endpoint=${row.endpointId}`)}
           >
