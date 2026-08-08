@@ -10,7 +10,6 @@ import {
 } from "../../lib/auth";
 import { num, score, vday } from "../../lib/format";
 import { STATIC_MODE, capturedAt } from "../../lib/snapshot";
-import { Health } from "./HealthStrip";
 import { LIVE_MS, freshness, togglePaused, useLive, usePaused } from "../../lib/useLive";
 import type { Live, System } from "../../lib/api-types";
 
@@ -70,11 +69,10 @@ export function LiveBar() {
         <span className="text-crit">control plane unreachable — figures are stale</span>
       )}
 
-      {/* Component health used to own a second full-width band beneath this
-          one, on every screen, five pills wide and four of them green. It is
-          the same information in the same place, folded to what is actually
-          wrong plus a count of what is not. */}
-      <Health />
+      {/* Per-component health is no longer carried here. `live.error` above
+          still reports a control plane that cannot be reached at all, and the
+          per-source state — which sensor wrote what, and when it last did —
+          is a column on the Sensor Grid. */}
 
       <span className="ml-auto flex items-center gap-3">
         {live.data?.pipeline?.running && (
