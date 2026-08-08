@@ -20,7 +20,6 @@ describe("Nav", () => {
       "#/classification",
       "#/sensor",
       "#/behaviour",
-      "#/risk",
       "#/forecast",
       "#/findings",
       "#/remediation",

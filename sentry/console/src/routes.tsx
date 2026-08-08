@@ -7,7 +7,6 @@ import { Classification } from "./views/Classification";
 import { SensorGrid } from "./views/SensorGrid";
 import { Correlation } from "./views/Correlation";
 import { Behaviour } from "./views/Behaviour";
-import { RiskRegister } from "./views/RiskRegister";
 import { Forecast } from "./views/Forecast";
 import { Findings } from "./views/Findings";
 import { Remediation } from "./views/Remediation";
@@ -40,7 +39,10 @@ export interface Area {
 export const AREAS: Area[] = [
   { id: "monitor", label: "Monitor", description: "What needs attention", landing: "/" },
   { id: "estate", label: "Estate", description: "Inventory and ownership", landing: "/estate" },
-  { id: "risk", label: "Risk", description: "Priorities and evidence", landing: "/risk" },
+  // Landing moved off the removed Risk Register. Findings is the other surface
+  // in this task that ranks by consequence, so the area still opens on
+  // something that answers "what matters most".
+  { id: "risk", label: "Risk", description: "Priorities and evidence", landing: "/findings" },
   { id: "respond", label: "Respond", description: "Controls and retirement", landing: "/remediation" },
   { id: "system", label: "System", description: "Automation and audit", landing: "/operations" },
 ];
@@ -61,7 +63,6 @@ export const SURFACES: Surface[] = [
   { path: "/correlation", label: "Correlation", description: "How duplicates are merged and owners resolved", aliases: ["Ownership"], group: "Detection", area: "estate", view: Correlation },
   { path: "/behaviour", label: "Behaviour", description: "APIs behaving unlike themselves", aliases: ["Anomalies"], group: "Detection", area: "risk", view: Behaviour },
 
-  { path: "/risk", label: "Risk Register", description: "How dangerous each API is, and why", aliases: ["CDRI"], group: "Assessment", area: "risk", view: RiskRegister },
   { path: "/forecast", label: "Forecast", description: "Which APIs are dying, and how soon", aliases: ["Retirement forecast"], group: "Assessment", area: "risk", view: Forecast },
   { path: "/findings", label: "Findings", description: "What law each failure breaks", aliases: ["Compliance findings"], group: "Assessment", area: "risk", view: Findings },
 

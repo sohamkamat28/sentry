@@ -45,9 +45,9 @@ export const TOUR_STEPS: TourStep[] = [
     body: "Is anyone calling it, and does anyone own it. They are independent: a heavily used API can have no owner, and a retired one can still be somebody's responsibility. The matrix is every combination — select a cell to open that slice.",
   },
   {
-    path: "/risk",
+    path: "/triage",
     title: "How dangerous, and why",
-    body: "CDRI scores each endpoint from 0 to 1. Expand any row and the six weighted factors are listed with their contributions, and they add to the total. A score an operator is asked to act on has to be decomposable, or it is just an assertion.",
+    body: "CDRI scores each endpoint from 0 to 1. Select anything in the queue and the six weighted factors are listed on the right with their contributions, and they add to the total. A score an operator is asked to act on has to be decomposable, or it is just an assertion.",
   },
   {
     path: "/findings",

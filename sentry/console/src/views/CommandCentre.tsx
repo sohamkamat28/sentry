@@ -4,7 +4,7 @@ import { Gauge } from "../components/data/Gauge";
 import { Metric } from "../components/data/Metric";
 import { Table, type Column } from "../components/data/Table";
 import { navigate } from "../lib/router";
-import { num, score, tierClass, lifecycleClass } from "../lib/format";
+import { num, score, tierClass, lifecycleClass, governanceClass } from "../lib/format";
 import type {
   Classification,
   Discovery,
@@ -14,8 +14,6 @@ import type {
   System,
 } from "../lib/api-types";
 
-const LIFECYCLES = ["ACTIVE", "DEPRECATED", "DORMANT", "ZOMBIE"];
-const GOVERNANCE = ["OWNED", "ORPHANED", "SHADOW"];
 const TIERS = ["CRITICAL", "HIGH", "MEDIUM", "LOW"] as const;
 
 const TIER_TONE: Record<(typeof TIERS)[number], "crit" | "warn" | "info" | "ok"> = {
@@ -44,8 +42,6 @@ export function CommandCentre() {
   const system = useLive<System>("system", "/system", SLOW_MS);
 
   const items = estate.data?.items ?? [];
-  const cell = (lc: string, gov: string) =>
-    cls.data?.matrix?.find((m) => m.lifecycle === lc && m.governance === gov)?.n ?? 0;
 
   const count = (pred: (e: EstateItemsItem) => boolean) =>
     estate.isLoading || estate.error ? undefined : items.filter(pred).length;
@@ -62,12 +58,18 @@ export function CommandCentre() {
 
   const byId = new Map(items.map((e) => [e.id, e]));
 
-  // Four columns, not six. This is a summary in a two-thirds card, and service
-  // and governance were the two that pushed the row past the card's edge —
-  // clipped, they read as a rendering fault rather than as more data. The full
-  // six-column table is one click away in the risk register.
+  // Six columns again. They were cut to four when this table shared a row with
+  // the lifecycle matrix and rows were clipping at the card's edge; the queue
+  // now has the full width, and with the risk register gone it is the only
+  // ranked view of CDRI in the console, so service and governance earn their
+  // place back rather than leaving the table half empty.
   const columns: Column<Risk["items"][number]>[] = [
     { key: "ep", header: "endpoint", render: (r) => `${r.method} ${r.path}` },
+    {
+      key: "svc",
+      header: "service",
+      render: (r) => byId.get(r.endpoint_id)?.service ?? "—",
+    },
     {
       key: "score",
       header: "CDRI",
@@ -86,6 +88,14 @@ export function CommandCentre() {
       render: (r) => {
         const lc = byId.get(r.endpoint_id)?.lifecycle;
         return <span className={lifecycleClass(lc)}>{lc ?? "—"}</span>;
+      },
+    },
+    {
+      key: "gov",
+      header: "governance",
+      render: (r) => {
+        const g = byId.get(r.endpoint_id)?.governance;
+        return <span className={governanceClass(g)}>{g ?? "—"}</span>;
       },
     },
   ];
@@ -171,7 +181,7 @@ export function CommandCentre() {
         <Card
           title="Risk distribution"
           sub="every scored endpoint, by tier"
-          href="#/risk"
+          href="#/estate"
         >
           {/* `items-stretch`, not `items-end`: aligning to the end sizes each
               column to its content, leaving the bar track no height to fill. */}
@@ -203,7 +213,9 @@ export function CommandCentre() {
           </div>
         </Card>
 
-        <Card title="Mean CDRI" sub="composite danger across the estate" href="#/risk">
+        {/* No `↗`: this is one number for the whole estate, and there is no
+            screen that shows "the mean" in more detail to send anyone to. */}
+        <Card title="Mean CDRI" sub="composite danger across the estate">
           {/* No legend: "scored / headroom" restates the arc it sits under, and
               in a fixed row those twenty pixels are the difference between the
               gauge fitting and the band growing. */}
@@ -264,15 +276,19 @@ export function CommandCentre() {
         </Card>
       </div>
 
-      {/* The band that takes whatever is left. Both cards scroll inside their
-          own frame rather than pushing the page down. */}
-      <div className="grid min-h-[260px] flex-1 grid-cols-1 gap-3 lg:grid-cols-2 xl:min-h-0">
+      {/* The band that takes whatever is left, now given entirely to the queue.
+          The lifecycle matrix used to share it; every cell it held is already a
+          filter on the estate register, and beside a list of what to do next it
+          read as a second thing to decide between. One table, full width, so
+          the rows a reader is meant to act on get the space. */}
+      <div className="flex min-h-[260px] flex-1 flex-col xl:min-h-0">
         <Card
           title="Action queue"
-          sub="critical, soonest breach first"
-          href="#/risk"
+          sub="critical, soonest breach first — select a row to open its controls"
+          href="#/triage"
           flush
           scroll
+          className="min-h-0 flex-1"
         >
           <Table
             columns={columns}
@@ -285,47 +301,6 @@ export function CommandCentre() {
             rowLabel={(r) => `Open remediation for ${r.method} ${r.path}`}
             framed={false}
           />
-        </Card>
-
-        <Card
-          title="Lifecycle × governance"
-          sub="select a cell to open that slice of the register"
-          flush
-          scroll
-        >
-          <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr>
-                <th className="th" />
-                {GOVERNANCE.map((g) => (
-                  <th key={g} className="th text-right">
-                    {g}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {LIFECYCLES.map((lc) => (
-                <tr key={lc}>
-                  <td className={`cell ${lifecycleClass(lc)}`}>{lc}</td>
-                  {GOVERNANCE.map((g) => (
-                    <td key={g} className="cell num p-0 text-right">
-                      <button
-                        className="w-full px-3.5 py-2 text-right transition-colors hover:bg-raise disabled:cursor-not-allowed"
-                        type="button"
-                        disabled={Boolean(cls.error)}
-                        onClick={() => navigate(`/estate?lifecycle=${lc}&governance=${g}`)}
-                      >
-                        {cls.isLoading || cls.error ? "—" : num(cell(lc, g))}
-                      </button>
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
         </Card>
       </div>
     </div>
