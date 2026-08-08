@@ -14,12 +14,20 @@ from fastapi.testclient import TestClient  # noqa: E402
 from app.audit import ledger  # noqa: E402
 from app.main import app  # noqa: E402
 from sentry_core.db import SessionLocal, create_all  # noqa: E402
-from sentry_core.enums import BlastTier, Confidence, Criticality, Governance, Lifecycle  # noqa: E402
+from sentry_core.enums import (  # noqa: E402
+    BlastTier,
+    Confidence,
+    Criticality,
+    Governance,
+    Lifecycle,
+    Source,
+)
 from sentry_core.models import (  # noqa: E402
     AuditEntry,
     Blast,
     Classification,
     Endpoint,
+    EndpointSource,
     Service,
 )
 
@@ -223,6 +231,39 @@ def test_shadow_reliability_is_reported(client):
     and the API must say so rather than letting a SHADOW verdict rest on it."""
     b = client.get("/api/v1/discovery", headers=VIEWER).json()
     assert b["shadow_reliable"] is False
+
+
+def test_shadow_count_matches_classification(client):
+    """Shadow has to mean one thing.
+
+    `/discovery` counts it in SQL; `/system` reports what the classification
+    engine decided. The console renders both on the same screen — the header
+    read `shadow 33` and the tile below it read `SHADOW 32`, which tells a
+    reader that one of them is wrong, and one of them was.
+
+    This endpoint is the case that split them: discovered only by the legacy
+    inventory scan, in no gateway and no repository. `governance_for` calls that
+    SHADOW because it asks only about the gateway and the code, while the SQL
+    started from the eBPF set and so never saw it.
+    """
+    with SessionLocal() as db:
+        db.merge(Service(id="svc_legacy", name="legacy-svc", team="Core",
+                         first_vday=0, last_vday=0, criticality=Criticality.CUSTOMER))
+        db.merge(Endpoint(id="ep_legacy_shadow", method="POST",
+                          path_template="/soap#Op", service_id="svc_legacy", first_vday=0))
+        db.merge(EndpointSource(endpoint_id="ep_legacy_shadow", source=Source.LEGACY,
+                                first_vday=0, last_vday=0, detail={}))
+        db.merge(Classification(endpoint_id="ep_legacy_shadow", lifecycle=Lifecycle.DORMANT,
+                                governance=Governance.SHADOW, confidence=Confidence.CONFIRMED,
+                                trace=[], vday=200, engine_version="t"))
+        db.commit()
+
+    disc = client.get("/api/v1/discovery", headers=VIEWER).json()
+    system = client.get("/api/v1/system", headers=VIEWER).json()
+
+    # The endpoint no sensor but the legacy scan found is still shadow.
+    assert disc["shadow_count"] >= 1
+    assert disc["shadow_count"] == system["governance"].get("SHADOW", 0)
 
 
 def test_classification_detail_returns_the_replayable_trace(client, seeded):

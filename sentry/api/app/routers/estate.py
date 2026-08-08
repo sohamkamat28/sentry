@@ -36,12 +36,26 @@ router = APIRouter(tags=["estate"])
 
 
 def _shadow_ids(db: Session) -> set[str]:
-    """Shadow is defined once, here, in SQL: traffic observed, absent from the
-    gateway registry AND absent from every code repository."""
-    ebpf = select(EndpointSource.endpoint_id).where(EndpointSource.source == Source.EBPF)
+    """Shadow is defined once, here, in SQL: known to us by any sensor, absent
+    from the gateway registry AND absent from every code repository.
+
+    The starting set is every endpoint we have discovered, not only the ones the
+    kernel probe saw. Anchoring it to eBPF made this disagree with the engine
+    that actually assigns governance: `classification.governance_for` asks only
+    "in no gateway and no code", regardless of which sensor found the endpoint,
+    so a SOAP operation discovered by the legacy inventory scan and registered
+    nowhere was SHADOW on the estate and invisible to this count.
+
+    The console showed both numbers on one screen — `shadow 33` in the header
+    from the classification totals, `SHADOW 32` in the tile from here — which
+    reads as one of them being wrong, and one of them was. They are now the same
+    set by construction, and `test_shadow_count_matches_classification` holds
+    them together.
+    """
+    known = select(EndpointSource.endpoint_id).distinct()
     gw = select(EndpointSource.endpoint_id).where(EndpointSource.source == Source.GATEWAY)
     code = select(EndpointSource.endpoint_id).where(EndpointSource.source == Source.CODE)
-    return set(db.execute(ebpf).scalars()) - set(db.execute(gw).scalars()) - set(
+    return set(db.execute(known).scalars()) - set(db.execute(gw).scalars()) - set(
         db.execute(code).scalars())
 
 
