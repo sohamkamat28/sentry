@@ -4,6 +4,8 @@ import { Nav } from "./components/shell/Nav";
 import { LiveBar } from "./components/shell/LiveBar";
 import { HealthStrip } from "./components/shell/HealthStrip";
 import { CommandPalette } from "./components/shell/CommandPalette";
+import { Door } from "./components/shell/Door";
+import { Tour } from "./components/shell/Tour";
 import { useRoute, routePath } from "./lib/router";
 import { areaForPath, SURFACES } from "./routes";
 
@@ -24,7 +26,9 @@ export function App() {
   const surface = SURFACES.find((s) => s.path === routePath(path));
   const area = areaForPath(routePath(path));
   const View = surface?.view;
-  const fullBleed = surface?.path === "/";
+  // Triage manages its own three-pane height; a page heading above it would
+  // only steal a row from the queue.
+  const fullBleed = surface?.path === "/triage";
 
   useEffect(() => {
     document.title = surface ? `${surface.label} · SENTRY` : "SENTRY";
@@ -77,6 +81,8 @@ export function App() {
         </main>
       </div>
       <CommandPalette />
+      <Tour />
+      <Door />
     </div>
   );
 }

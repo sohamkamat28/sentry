@@ -1,5 +1,6 @@
 import { SURFACES } from "../../routes";
 import { routePath } from "../../lib/router";
+import { startTour } from "../../lib/tour";
 import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_SURFACES = SURFACES.filter((surface) => surface.path !== "/correlation");
@@ -51,13 +52,20 @@ export function Nav({ path }: { path: string }) {
       {/* The reference puts a profile card here. There is no signed-in identity
           on a published recording, so this carries what the product is instead
           of inventing a person to greet. */}
-      <div className="hidden items-center justify-between gap-2 rounded-[var(--radius-card)] border border-line bg-panel px-3 py-2.5 md:flex">
-        <span className="font-sans text-[11px] leading-4 text-tx4">
-          API lifecycle
-          <br />
-          security
-        </span>
-        <ThemeToggle />
+      <div className="hidden rounded-[var(--radius-card)] border border-line bg-panel p-2.5 md:block">
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-sans text-[11px] leading-4 text-tx4">
+            API lifecycle
+            <br />
+            security
+          </span>
+          <ThemeToggle />
+        </div>
+        {/* The tour is worth nothing if it can only be reached from an overlay
+            that is dismissed once and never returns. */}
+        <button type="button" className="btn mt-2.5 w-full justify-center" onClick={startTour}>
+          Guided tour
+        </button>
       </div>
 
       <div className="-mx-1 flex gap-1 overflow-x-auto px-1 md:mx-0 md:flex-col md:gap-0.5 md:rounded-[var(--radius-card)] md:border md:border-line md:bg-panel md:p-1.5">
@@ -68,6 +76,13 @@ export function Nav({ path }: { path: string }) {
               key={surface.path}
               href={`#${surface.path}`}
               aria-current={active ? "page" : undefined}
+              // The plain-English line lives here rather than under the label.
+              // Rendered inline it repeats the page header verbatim on fifteen
+              // of the sixteen surfaces, and sixteen two-line entries turn the
+              // rail into the wall of text this console keeps being accused of.
+              // On hover it is there for the one question the rail cannot
+              // otherwise answer: which of these do I want?
+              title={surface.description}
               className={`shrink-0 whitespace-nowrap rounded-[var(--radius-control)] px-3 py-2 font-sans text-[12.5px] transition-colors duration-150 md:shrink ${
                 active
                   ? "bg-accent font-medium text-[rgb(var(--accent-tx))]"
