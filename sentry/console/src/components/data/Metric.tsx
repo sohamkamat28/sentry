@@ -2,12 +2,16 @@ import type { ReactNode } from "react";
 
 export type Tone = "ok" | "warn" | "crit" | "info" | "dim";
 
+// Wrapped in `rgb()`. The variables hold channel triplets — `--crit` is
+// `255 92 92`, not a colour — so a bare `color: var(--crit)` is invalid CSS,
+// silently dropped, and every tile rendered in the inherited text colour. The
+// tone prop was plumbed through six call sites and had never once been visible.
 const TONE: Record<Tone, string> = {
-  ok: "var(--ok)",
-  warn: "var(--warn)",
-  crit: "var(--crit)",
-  info: "var(--info)",
-  dim: "var(--tx3)",
+  ok: "rgb(var(--ok))",
+  warn: "rgb(var(--warn))",
+  crit: "rgb(var(--crit))",
+  info: "rgb(var(--info))",
+  dim: "rgb(var(--tx3))",
 };
 
 interface Props {
@@ -38,17 +42,22 @@ export function Metric({ value, label, sub, tone = "dim", loading, error, degrad
   const failure = error instanceof Error ? error.message : failed ? String(error) : null;
 
   return (
-    <div className="rounded-sm border border-line bg-panel px-3 py-2.5">
+    <div className="panel px-4 py-3.5 transition-colors duration-200">
+      {/* Label above figure. The reference leads with the number, but a bare
+          `33` says nothing until you know what was counted — and these tiles sit
+          six abreast, so the eye needs the noun before the digit. */}
+      <div className="font-sans text-[11px] font-medium uppercase tracking-[0.08em] text-tx4">
+        {label}
+      </div>
       <div
-        className="font-mono text-2xl leading-none tabular-nums"
-        style={{ color: failed ? "var(--crit)" : pending ? "var(--tx3)" : TONE[tone] }}
+        className="num mt-1.5 font-mono text-[30px] font-medium leading-none tracking-[-0.02em]"
+        style={{ color: failed ? TONE.crit : pending ? TONE.dim : TONE[tone] }}
         aria-busy={(loading && !failed) || undefined}
       >
         {pending ? "—" : value}
       </div>
-      <div className="mt-1.5 text-[10.5px] uppercase tracking-wide text-tx3">{label}</div>
       {(sub || pending || degraded) && (
-        <div className="mt-0.5 text-[10.5px] text-tx4">
+        <div className="mt-1.5 font-sans text-[11px] leading-4 text-tx4">
           {failed
             ? `unavailable${failure ? ` — ${failure}` : ""}`
             : pending

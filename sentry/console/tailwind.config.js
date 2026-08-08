@@ -14,6 +14,7 @@ export default {
       colors: {
         bg: "rgb(var(--bg) / <alpha-value>)",
         panel: "rgb(var(--panel) / <alpha-value>)",
+        raise: "rgb(var(--raise) / <alpha-value>)",
         line: "rgb(var(--line) / <alpha-value>)",
         tx1: "rgb(var(--tx1) / <alpha-value>)",
         tx2: "rgb(var(--tx2) / <alpha-value>)",
@@ -23,9 +24,21 @@ export default {
         warn: "rgb(var(--warn) / <alpha-value>)",
         crit: "rgb(var(--crit) / <alpha-value>)",
         info: "rgb(var(--info) / <alpha-value>)",
+        accent: "rgb(var(--accent) / <alpha-value>)",
       },
       fontFamily: {
-        sans: ["Avenir Next", "Segoe UI", "Helvetica Neue", "sans-serif"],
+        // A geometric-leaning UI stack for chrome and prose. `ui-sans-serif`
+        // first so each platform contributes its own interface face rather than
+        // falling back to whatever Helvetica variant happens to be installed.
+        sans: [
+          "ui-sans-serif",
+          "system-ui",
+          "-apple-system",
+          "Segoe UI",
+          "Inter",
+          "Helvetica Neue",
+          "sans-serif",
+        ],
         mono: ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
       },
     },

@@ -18,6 +18,12 @@ interface Props<T> {
   empty?: string;
   onRowClick?: (row: T) => void;
   rowLabel?: (row: T) => string;
+  /**
+   * Draw the surrounding panel. Off when the table is already inside a `Card`,
+   * which otherwise nests a bordered box in a bordered box and reads as two
+   * frames competing for the same edge.
+   */
+  framed?: boolean;
 }
 
 /**
@@ -37,10 +43,11 @@ export function Table<T>({
   empty = "no rows",
   onRowClick,
   rowLabel,
+  framed = true,
 }: Props<T>) {
   const span = columns.length;
   return (
-    <div className="panel overflow-x-auto">
+    <div className={`overflow-x-auto ${framed ? "panel" : ""}`}>
       <table className="w-full border-collapse">
         <thead>
           <tr>

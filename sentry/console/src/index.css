@@ -14,21 +14,69 @@
  * Stored as `R G B` and consumed through `rgb()` so both the solid and the
  * translucent forms work from one definition. */
 :root {
-  --bg: 11 13 16;
-  --panel: 18 21 26;
-  --line: 30 35 43;
+  --bg: 8 10 18;
+  --panel: 18 23 36;
+  /* One step above panel: hover, selected rows, and the inner wells that hold a
+     chart inside a card. Previously every surface borrowed `line` for this and
+     a hovered row was indistinguishable from a border. */
+  --raise: 26 32 50;
+  --line: 35 42 61;
 
-  --tx1: 230 233 239; /* primary */
-  --tx2: 182 190 205; /* secondary */
-  --tx3: 139 149 165; /* labels */
-  --tx4: 97 107 125; /* sub-labels, absent values */
+  --tx1: 232 235 242; /* primary */
+  --tx2: 178 187 206; /* secondary */
+  --tx3: 133 145 170; /* labels */
+  --tx4: 96 107 133; /* sub-labels, absent values */
 
   /* Severity is the only thing colour encodes here. Nothing decorative is
      allowed near these four hues, so a red cell always means the same thing. */
-  --ok: 78 201 176;
+  --ok: 45 212 191;
   --warn: 255 180 84;
   --crit: 255 92 92;
   --info: 106 169 255;
+
+  /* Interaction, kept deliberately apart from severity.
+     `info` has to stay legible as small text on a dark panel, which caps how
+     saturated it can be. `accent` is only ever a fill — the primary button, a
+     gauge arc, the active nav pill — so it can be the electric blue the rest of
+     the palette cannot afford. Reusing one blue for both made every focus ring
+     read as a severity signal. */
+  --accent: 59 110 246;
+  --accent-tx: 255 255 255; /* text that sits on an accent fill */
+
+  --radius-card: 16px;
+  --radius-control: 10px;
+  --radius-pill: 999px;
+
+  /* The ambient wash behind the shell. Kept to a single very low-alpha radial:
+     enough to lift the page off flat black, not enough to tint a severity hue. */
+  --glow: 59 110 246;
+  --glow-alpha: 0.1;
+}
+
+:root[data-theme="light"] {
+  --bg: 240 244 251;
+  --panel: 255 255 255;
+  --raise: 244 247 252;
+  --line: 224 231 243;
+
+  --tx1: 14 22 41;
+  --tx2: 51 63 88;
+  --tx3: 88 100 127;
+  --tx4: 128 140 166;
+
+  /* The dark-theme hues are tuned for light text on a dark panel and fail WCAG
+     AA as small text on white. These are the same four meanings, re-picked for
+     a light ground rather than reused. */
+  --ok: 13 148 136;
+  --warn: 180 83 9;
+  --crit: 220 38 38;
+  --info: 37 99 235;
+
+  --accent: 37 99 235;
+  --accent-tx: 255 255 255;
+
+  --glow: 59 110 246;
+  --glow-alpha: 0.08;
 }
 
 @layer base {
@@ -36,43 +84,94 @@
     color-scheme: dark;
     scroll-behavior: smooth;
   }
+  html[data-theme="light"] {
+    color-scheme: light;
+  }
   body {
     background: rgb(var(--bg));
     color: rgb(var(--tx1));
-    @apply font-mono text-[13px] antialiased;
+    @apply font-sans text-[13px] antialiased;
   }
-  /* Tabular figures throughout. A column of counts whose width shifts as digits
-     change cannot be read at a glance, and glancing is what this is for. */
+  /* Two very low-alpha radials, fixed so they do not travel with a scrolling
+     table. `z-index: -1` puts them above the body's own background and below
+     every panel, which is what keeps a card's edge readable against them. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        55rem 38rem at 15% -12%,
+        rgb(var(--glow) / var(--glow-alpha)),
+        transparent 70%
+      ),
+      radial-gradient(
+        45rem 32rem at 105% 5%,
+        rgb(var(--glow) / calc(var(--glow-alpha) * 0.55)),
+        transparent 70%
+      );
+  }
+  /* Prose and chrome are sans; data is mono. Endpoint paths, ids and figures
+     are scanned down a column rather than read, and a proportional face makes
+     `/api/v1/nostro/{id}` and `/api/v1/nostro/{id}/positions` hard to tell
+     apart at a glance. Everything around them reads better as sans. */
   table,
   .num {
     font-variant-numeric: tabular-nums;
   }
   ::selection {
-    background: rgb(var(--info));
-    color: rgb(var(--bg));
+    background: rgb(var(--accent));
+    color: rgb(var(--accent-tx));
   }
   :where(a, button, input, select, textarea):focus-visible {
-    @apply outline-none ring-2 ring-info/70 ring-offset-2 ring-offset-bg;
+    @apply outline-none ring-2 ring-accent/70 ring-offset-2 ring-offset-bg;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
 @layer components {
   .cell {
-    @apply px-3 py-1.5 border-b border-line align-top;
+    @apply px-3.5 py-2 border-b border-line/70 align-top font-mono text-[12.5px];
   }
   .th {
-    @apply px-3 py-1.5 text-left text-[10.5px] uppercase tracking-wide text-tx3
-           border-b border-line font-normal sticky top-0 bg-panel z-10;
+    @apply px-3.5 py-2 text-left text-[10.5px] uppercase tracking-[0.08em] text-tx4
+           border-b border-line font-sans font-medium sticky top-0 bg-panel z-10;
   }
   .panel {
-    @apply rounded-sm border border-line bg-panel;
+    @apply rounded-[var(--radius-card)] border border-line bg-panel;
+  }
+  /* A well is a panel sunk into a panel — the ground a chart or a code block
+     sits on. Without it, nesting a bordered box inside a bordered card reads as
+     two competing frames. */
+  .well {
+    @apply rounded-[var(--radius-control)] bg-raise;
   }
   .chip {
-    @apply inline-block rounded-sm border border-line px-1.5 py-0.5 text-[10.5px];
+    @apply inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-line
+           bg-raise px-2.5 py-1 font-sans text-[11px] leading-none text-tx2;
   }
   .btn {
-    @apply rounded-sm border border-line bg-panel px-2.5 py-1 text-[12px]
-           transition duration-200 hover:border-tx4 active:translate-y-px
+    @apply inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-line
+           bg-raise px-3 py-1.5 font-sans text-[12px] transition duration-200
+           hover:border-tx4 hover:text-tx1 active:translate-y-px
+           disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-line;
+  }
+  .btn-primary {
+    @apply inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-accent
+           bg-accent px-3.5 py-1.5 font-sans text-[12px] font-medium text-[rgb(var(--accent-tx))]
+           transition duration-200 hover:brightness-110 active:translate-y-px
            disabled:cursor-not-allowed disabled:opacity-40;
   }
 }

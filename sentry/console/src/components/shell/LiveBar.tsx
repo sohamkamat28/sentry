@@ -40,7 +40,7 @@ export function LiveBar() {
   const blind = live.data?.source === "unavailable";
 
   return (
-    <div className="flex shrink-0 items-center gap-4 overflow-x-auto border-b border-line bg-panel px-3 py-1.5 text-[11.5px]">
+    <div className="flex shrink-0 items-center gap-4 overflow-x-auto border-b border-line bg-panel/60 px-4 py-2 text-[11.5px] backdrop-blur">
       <Item label="vday" value={vday(live.data?.vday ?? system.data?.vday)} />
       <Item label="endpoints" value={num(system.data?.endpoints)} />
       <Item
@@ -206,10 +206,10 @@ function Item({
   title?: string;
 }) {
   return (
-    <span className="flex items-baseline gap-1.5" title={title}>
-      <span className="text-tx4">{label}</span>
+    <span className="flex items-baseline gap-1.5 whitespace-nowrap" title={title}>
+      <span className="font-sans text-tx4">{label}</span>
       {/* Absent renders as an em dash, never as zero. */}
-      <span className="num text-tx1">{value ?? "—"}</span>
+      <span className="num font-mono text-tx1">{value ?? "—"}</span>
     </span>
   );
 }

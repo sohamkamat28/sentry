@@ -1,10 +1,32 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
     <title>SENTRY</title>
+    <script>
+      // Blocking on purpose. Resolving the theme after the bundle loads paints
+      // one frame in the wrong palette, and on a light-mode laptop that frame
+      // is a full-screen black flash on every navigation.
+      (function () {
+        try {
+          var stored = localStorage.getItem("sentry.theme");
+          var theme =
+            stored === "light" || stored === "dark"
+              ? stored
+              : window.matchMedia("(prefers-color-scheme: light)").matches
+                ? "light"
+                : "dark";
+          document.documentElement.dataset.theme = theme;
+          document
+            .querySelector('meta[name="color-scheme"]')
+            .setAttribute("content", theme);
+        } catch (e) {
+          /* The default attribute above already stands. */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -42,7 +42,7 @@ export function App() {
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <LiveBar />
         <HealthStrip />
-        <main id="main-content" tabIndex={-1} className={`min-h-0 flex-1 ${fullBleed ? "overflow-y-auto p-2 md:overflow-hidden md:p-3" : "overflow-y-auto p-3 md:p-5"}`}>
+        <main id="main-content" tabIndex={-1} className={`min-h-0 flex-1 ${fullBleed ? "overflow-y-auto p-2.5 md:overflow-hidden md:p-4" : "overflow-y-auto p-3.5 md:p-6"}`}>
           {View ? (
             fullBleed ? (
               <>
@@ -52,13 +52,13 @@ export function App() {
             ) : (
               <>
                 <header className="mb-5 font-sans">
-                  <div className="mb-1 text-[10.5px] font-medium uppercase tracking-[0.12em] text-info">
+                  <div className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-accent">
                     {area?.label}
                   </div>
-                  <h1 className="text-[21px] font-semibold leading-tight tracking-[-0.02em] text-tx1">
+                  <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.025em] text-tx1">
                     {surface.label}
                   </h1>
-                  <p className="mt-1 max-w-[65ch] text-[12px] leading-5 text-tx3">
+                  <p className="mt-1 max-w-[65ch] text-[13px] leading-5 text-tx3">
                     {surface.description}
                   </p>
                 </header>
@@ -69,7 +69,7 @@ export function App() {
             <div className="panel max-w-lg p-5 font-sans">
               <h1 className="text-[18px] font-semibold text-tx1">View not found</h1>
               <p className="mt-1 text-[12px] text-tx3">There is no console view at {routePath(path)}.</p>
-              <a className="mt-4 inline-block text-[12px] text-info hover:underline" href="#/">
+              <a className="mt-4 inline-block text-[12px] text-accent hover:underline" href="#/">
                 Return to the work queue
               </a>
             </div>
