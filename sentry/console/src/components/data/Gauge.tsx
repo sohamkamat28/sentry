@@ -18,6 +18,12 @@ interface Props {
   caption?: string;
   tone?: Tone;
   legend?: { label: string; tone?: Tone }[];
+  /**
+   * Cap on the arc's width. The drawing is 120×104, so its height is about
+   * 0.87× this — the knob to turn when the gauge has to fit a fixed row rather
+   * than take the width its card happens to have.
+   */
+  maxWidth?: number;
 }
 
 /**
@@ -31,13 +37,13 @@ interface Props {
  * at zero and a gauge that could not be read look nothing alike, which is the
  * same rule the metric tile enforces one level up.
  */
-export function Gauge({ value, display, caption, tone = "dim", legend }: Props) {
+export function Gauge({ value, display, caption, tone = "dim", legend, maxWidth = 190 }: Props) {
   const known = value != null && Number.isFinite(value);
   const pct = known ? Math.max(0, Math.min(1, value)) * 100 : 0;
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative w-full max-w-[190px]">
+      <div className="relative w-full" style={{ maxWidth }}>
         <svg viewBox="0 0 120 104" className="w-full" role="img" aria-label={caption ?? "gauge"}>
           <path
             d="M20.2 83 A46 46 0 1 1 99.8 83"

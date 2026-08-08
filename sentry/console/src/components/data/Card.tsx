@@ -14,6 +14,14 @@ interface Props {
   action?: ReactNode;
   /** Removes body padding, for a card whose child is a table or a chart. */
   flush?: boolean;
+  /**
+   * Scroll the body instead of growing the card.
+   *
+   * For a card inside a height-filling grid: the card takes the height the grid
+   * gives it and a long list scrolls within its own frame, so one long table
+   * cannot push everything below it off the screen.
+   */
+  scroll?: boolean;
   className?: string;
   children: ReactNode;
 }
@@ -26,7 +34,7 @@ interface Props {
  * screen to screen. Collecting it here is what makes a bento grid read as one
  * object instead of six unrelated frames.
  */
-export function Card({ title, sub, href, action, flush, className = "", children }: Props) {
+export function Card({ title, sub, href, action, flush, scroll, className = "", children }: Props) {
   const header = title || sub || href || action;
   return (
     <section
@@ -63,7 +71,16 @@ export function Card({ title, sub, href, action, flush, className = "", children
             ))}
         </div>
       )}
-      <div className={`min-w-0 flex-1 ${flush ? "" : "px-4 pb-4"}`}>{children}</div>
+      {/* `min-h-0` is what lets the body actually scroll: a flex child defaults
+          to `min-height: auto`, which refuses to shrink below its content and
+          silently defeats `overflow-auto` on it. */}
+      <div
+        className={`min-h-0 min-w-0 flex-1 ${flush ? "" : "px-4 pb-4"} ${
+          scroll ? "overflow-auto" : ""
+        }`}
+      >
+        {children}
+      </div>
     </section>
   );
 }

@@ -25,9 +25,12 @@ export function App() {
   const surface = SURFACES.find((s) => s.path === routePath(path));
   const area = areaForPath(routePath(path));
   const View = surface?.view;
-  // Triage manages its own three-pane height; a page heading above it would
-  // only steal a row from the queue.
-  const fullBleed = surface?.path === "/triage";
+  // These two manage their own height and fill the viewport rather than
+  // scrolling: Triage is a three-pane queue, Command Centre a bento that has to
+  // be readable at a glance. On both, a page heading above would only repeat
+  // the rail's active item and steal a row from the content. Below `md` they
+  // scroll normally — six cards cannot share a phone screen.
+  const fullBleed = surface?.path === "/triage" || surface?.path === "/";
 
   useEffect(() => {
     document.title = surface ? `${surface.label} · SENTRY` : "SENTRY";
@@ -44,7 +47,24 @@ export function App() {
       <Nav path={path} />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <LiveBar />
-        <main id="main-content" tabIndex={-1} className={`min-h-0 flex-1 ${fullBleed ? "overflow-y-auto p-2.5 md:overflow-hidden md:p-4" : "overflow-y-auto p-3.5 md:p-6"}`}>
+        {/* Where each surface stops scrolling and starts filling the viewport.
+            Triage is two panes and manages it from `md`. Command Centre needs
+            all four chart cards on one row before its bottom band has any
+            height to claim — below `xl` they wrap to two rows, the band gets
+            nothing, and the tables collapse to a couple of pixels. Written as
+            whole literals because Tailwind cannot see a class name assembled at
+            runtime. */}
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className={`min-h-0 flex-1 ${
+            surface?.path === "/triage"
+              ? "overflow-y-auto p-2.5 md:overflow-hidden md:p-4"
+              : surface?.path === "/"
+                ? "overflow-y-auto p-2.5 xl:overflow-hidden xl:p-4"
+                : "overflow-y-auto p-3.5 md:p-6"
+          }`}
+        >
           {View ? (
             fullBleed ? (
               <>

@@ -102,8 +102,17 @@ export function CommandCentre() {
   const sourceMax = Math.max(1, ...sources.map((s) => s.endpoints ?? 0));
 
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+    // Three bands that together fill the viewport exactly: the tiles and the
+    // chart row take what they need, the tables take the rest. Nothing here
+    // grows the page — the action queue had 23 rows and was 923px tall on its
+    // own, so a screen meant to be read at a glance was two screens of
+    // scrolling, and the estate matrix under it was never seen at all.
+    //
+    // `min-h-0` on the flex children is load-bearing: without it a flex item
+    // refuses to shrink below its content, and every `overflow-auto` inside
+    // silently does nothing.
+    <div className="flex flex-col gap-3 xl:h-full xl:overflow-hidden">
+      <div className="grid shrink-0 grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <Metric
           label="Critical"
           value={risk.isLoading || risk.error ? undefined : queue.length}
@@ -152,7 +161,7 @@ export function CommandCentre() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+      <div className="grid shrink-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4 xl:h-[184px]">
         <Spotlight
           endpoints={system.data?.endpoints}
           shadow={disc.data?.shadow_count}
@@ -166,7 +175,7 @@ export function CommandCentre() {
         >
           {/* `items-stretch`, not `items-end`: aligning to the end sizes each
               column to its content, leaving the bar track no height to fill. */}
-          <div className="flex h-[132px] items-stretch gap-2.5">
+          <div className="flex h-[86px] items-stretch gap-2.5">
             {tierCounts.map((t) => (
               <div key={t.tier} className="flex min-w-0 flex-1 flex-col items-center gap-2">
                 <span className="num font-mono text-[12.5px] text-tx2">
@@ -195,7 +204,11 @@ export function CommandCentre() {
         </Card>
 
         <Card title="Mean CDRI" sub="composite danger across the estate" href="#/risk">
+          {/* No legend: "scored / headroom" restates the arc it sits under, and
+              in a fixed row those twenty pixels are the difference between the
+              gauge fitting and the band growing. */}
           <Gauge
+            maxWidth={118}
             value={system.data?.mean_cdri}
             display={score(system.data?.mean_cdri)}
             caption="estate"
@@ -206,21 +219,60 @@ export function CommandCentre() {
                   ? "warn"
                   : "ok"
             }
-            legend={[
-              { label: "scored", tone: "dim" },
-              { label: "headroom" },
-            ]}
           />
+        </Card>
+
+        <Card title="Capture by source" sub="which sensor saw what" href="#/sensor">
+          {disc.isLoading && <p className="font-sans text-[12.5px] text-tx4">loading…</p>}
+          {disc.error && (
+            <p className="font-sans text-[12.5px] text-crit">{(disc.error as Error).message}</p>
+          )}
+          {!disc.isLoading && !disc.error && (
+            // One line per source: name, bar, count. Stacked over three lines
+            // each — with the bar and an "N seen only here" caption beneath —
+            // the fourth source fell outside the card and the reader had no
+            // way to know a sensor was missing from a panel about sensors.
+            // The exclusive count is on the row's title.
+            <ul className="space-y-1.5">
+              {sources.map((s) => (
+                <li
+                  key={s.source}
+                  className="flex items-center gap-2.5"
+                  title={`${num(s.exclusive)} endpoint(s) seen only by ${s.source}${
+                    s.healthy ? "" : " — unreachable"
+                  }`}
+                >
+                  <span className="w-[62px] shrink-0 truncate font-sans text-[11px] text-tx2">
+                    {s.source.toUpperCase()}
+                  </span>
+                  <span className="well h-1.5 min-w-0 flex-1 overflow-hidden">
+                    <span
+                      className="block h-full rounded-full transition-[width] duration-500"
+                      style={{
+                        width: `${((s.endpoints ?? 0) / sourceMax) * 100}%`,
+                        background: s.healthy ? "rgb(var(--accent))" : "rgb(var(--crit))",
+                      }}
+                    />
+                  </span>
+                  <span className="num w-7 shrink-0 text-right font-mono text-[12.5px] text-tx1">
+                    {num(s.endpoints)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+      {/* The band that takes whatever is left. Both cards scroll inside their
+          own frame rather than pushing the page down. */}
+      <div className="grid min-h-[260px] flex-1 grid-cols-1 gap-3 lg:grid-cols-2 xl:min-h-0">
         <Card
           title="Action queue"
           sub="critical, soonest breach first"
           href="#/risk"
           flush
-          className="lg:col-span-2"
+          scroll
         >
           <Table
             columns={columns}
@@ -235,53 +287,13 @@ export function CommandCentre() {
           />
         </Card>
 
-        <Card title="Capture by source" sub="which sensor saw what" href="#/sensor">
-          {disc.isLoading && <p className="font-sans text-[12.5px] text-tx4">loading…</p>}
-          {disc.error && (
-            <p className="font-sans text-[12.5px] text-crit">{(disc.error as Error).message}</p>
-          )}
-          {!disc.isLoading && !disc.error && (
-            <ul className="space-y-2.5">
-              {sources.map((s) => (
-                <li key={s.source}>
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="font-sans text-[12.5px] text-tx2">
-                      {s.source.toUpperCase()}
-                    </span>
-                    <span className="flex items-baseline gap-2">
-                      <span className="num font-mono text-[12.5px] text-tx1">
-                        {num(s.endpoints)}
-                      </span>
-                      {!s.healthy && (
-                        <span className="font-sans text-[11px] text-crit">unreachable</span>
-                      )}
-                    </span>
-                  </div>
-                  <div className="well mt-1.5 h-1.5 overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-[width] duration-500"
-                      style={{
-                        width: `${((s.endpoints ?? 0) / sourceMax) * 100}%`,
-                        background: s.healthy ? "rgb(var(--accent))" : "rgb(var(--crit))",
-                      }}
-                    />
-                  </div>
-                  <div className="mt-1 font-sans text-[11px] text-tx4">
-                    {num(s.exclusive)} seen only here
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-      </div>
-
-      <Card
-        title="Lifecycle × governance"
-        sub="select a cell to open that slice of the register"
-        flush
-      >
-        <div className="overflow-x-auto">
+        <Card
+          title="Lifecycle × governance"
+          sub="select a cell to open that slice of the register"
+          flush
+          scroll
+        >
+          <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
               <tr>
@@ -313,8 +325,9 @@ export function CommandCentre() {
               ))}
             </tbody>
           </table>
-        </div>
-      </Card>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
@@ -335,7 +348,9 @@ function Spotlight({
 }) {
   const known = endpoints != null && shadow != null;
   return (
-    <section className="panel relative isolate flex min-h-[180px] flex-col justify-end overflow-hidden p-5">
+    // No `min-h`: the card takes the height of the row it shares, so a minimum
+    // set here would push that row taller than the space budgeted for it.
+    <section className="panel relative isolate flex min-h-[164px] flex-col justify-end overflow-hidden p-4">
       <div
         aria-hidden="true"
         className="absolute inset-0 -z-10"
@@ -356,7 +371,7 @@ function Spotlight({
         }}
       />
       <span className="chip w-fit border-accent/40 text-accent">Estate</span>
-      <p className="mt-3 font-sans text-[20px] font-semibold leading-[1.28] tracking-[-0.02em] text-tx1">
+      <p className="mt-2.5 font-sans text-[20px] font-semibold leading-[1.22] tracking-[-0.02em] text-tx1">
         {known ? (
           <>
             <span className="num font-mono">{shadow}</span> of{" "}
