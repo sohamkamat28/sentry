@@ -41,6 +41,14 @@ export function Gauge({ value, display, caption, tone = "dim", legend, maxWidth 
   const known = value != null && Number.isFinite(value);
   const pct = known ? Math.max(0, Math.min(1, value)) * 100 : 0;
 
+  // The readable width inside the arc is about 0.675× the gauge's own width —
+  // the drawing is 120 units across with an 11-unit stroke on a radius of 46,
+  // so the clear span is roughly 81 of those units. At `maxWidth` 118 that is
+  // 80px, and `0.757` set in 28px mono wants about 84: the figure ran into the
+  // arc it sits inside. Two steps off the console's scale rather than a
+  // sliding size, so the number stays part of the same type system.
+  const figure = maxWidth >= 150 ? "text-[28px]" : "text-[20px]";
+
   return (
     <div className="flex flex-col items-center">
       <div className="relative w-full" style={{ maxWidth }}>
@@ -74,7 +82,7 @@ export function Gauge({ value, display, caption, tone = "dim", legend, maxWidth 
             </span>
           )}
           <span
-            className="num font-mono text-[28px] leading-tight"
+            className={`num font-mono ${figure} leading-tight`}
             style={{ color: known ? TONE[tone] : "rgb(var(--tx3))" }}
           >
             {known ? (display ?? `${Math.round(pct)}%`) : "—"}
