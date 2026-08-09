@@ -1,0 +1,27 @@
+# eBPF sensor — live capture evidence, 2026-08-09T09:28:10Z
+
+## Host kernel
+Linux 00de63de3d21 6.12.76-linuxkit #1 SMP Tue Jul 21 14:38:37 UTC 2026 aarch64 Linux
+
+## Load and attach (this run)
+{"time":"2026-08-09T09:26:11.948121884Z","level":"INFO","msg":"btf resolved","path":"/sys/kernel/btf/vmlinux"}
+{"time":"2026-08-09T09:26:13.509162426Z","level":"INFO","msg":"sentry-agent started","version":"dev","ingest":"ingest:9090","cgroup_prefix":"","scan_bytes":4096}
+{"time":"2026-08-09T09:26:13.567385051Z","level":"INFO","msg":"attached","pid":876,"lib":"openssl","build_id":"7b8576bde7714ba291ee76dcd75ee9b5f41080f2"}
+{"time":"2026-08-09T09:26:13.595446884Z","level":"INFO","msg":"attached","pid":1205,"lib":"openssl","build_id":"8b9c989fde64573732195d3c19f9919345afc667"}
+{"time":"2026-08-09T09:26:13.597507343Z","level":"INFO","msg":"attached","pid":3165,"lib":"openssl","build_id":"6b5e85710aea55ea99cea0f93a12850a"}
+{"time":"2026-08-09T09:26:23.547660042Z","level":"INFO","msg":"attached","pid":3230,"lib":"openssl","build_id":"79249db3b34fdeb2d53df3ac73aa98cefb735797"}
+{"time":"2026-08-09T09:26:23.548261292Z","level":"INFO","msg":"attached","pid":6415,"lib":"openssl","build_id":"1ed9da01a1c8042357349326f2cc6db9509066c8"}
+
+## In-kernel filter counters (latest sample)
+{"time":"2026-08-09T09:26:43.512423551Z","level":"INFO","msg":"filter","captured":595,"dropped_cgroup":0,"dropped_port":0,"dropped_discarder":0,"emitted":396,"ringbuf_lost":0}
+{"time":"2026-08-09T09:27:13.511407093Z","level":"INFO","msg":"filter","captured":2321,"dropped_cgroup":0,"dropped_port":0,"dropped_discarder":0,"emitted":1547,"ringbuf_lost":0}
+{"time":"2026-08-09T09:27:43.510349259Z","level":"INFO","msg":"filter","captured":4159,"dropped_cgroup":0,"dropped_port":0,"dropped_discarder":0,"emitted":2772,"ringbuf_lost":0}
+
+## Shipping to ingest (latest sample)
+{"time":"2026-08-09T09:26:43.512423884Z","level":"INFO","msg":"shipping","sent":186,"body_merged":387,"body_orphaned":0,"queue_dropped":0,"callers_named":5,"callers_unnamed":0}
+{"time":"2026-08-09T09:27:13.510816551Z","level":"INFO","msg":"shipping","sent":788,"body_merged":1501,"body_orphaned":0,"queue_dropped":0,"callers_named":5,"callers_unnamed":0}
+{"time":"2026-08-09T09:27:43.510298926Z","level":"INFO","msg":"shipping","sent":1470,"body_merged":2665,"body_orphaned":0,"queue_dropped":0,"callers_named":5,"callers_unnamed":0}
+
+## Attach failures — all against one pid, an image whose libssl the uprobe cannot open
+{"time":"2026-08-09T09:28:03.572716338Z","level":"WARN","msg":"attach failed","pid":875,"lib":"openssl","path":"/proc/875/root/lib/libssl.so.44.0.1","err":"creating perf_uprobe PMU: token /proc/875/root/lib/libssl.so.44.0.1:0x24157: opening perf event: invalid argument"}
+{"time":"2026-08-09T09:28:03.573415921Z","level":"WARN","msg":"attach failed","pid":875,"lib":"gnutls","path":"/proc/875/root/usr/lib/libgnutls.so.30.20.1","err":"creating perf_uprobe PMU: token /proc/875/root/usr/lib/libgnutls.so.30.20.1:0x2fdba: opening perf event: invalid argument"}

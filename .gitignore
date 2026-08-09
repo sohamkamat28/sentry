@@ -78,3 +78,6 @@ design/tsconfig*
 design/*.mjs
 design/*.ts
 design/*.docx
+
+# Regenerated from REPORT.md by pandoc; not a source artefact.
+report/report.html

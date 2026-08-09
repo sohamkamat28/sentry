@@ -1,0 +1,45 @@
+# Test suites — 2026-08-09T09:28:22Z
+
+## Python (pytest.ini testpaths = api/tests worker/tests)
+worker/tests/test_zerotrust.py::test_an_unremediable_gap_still_counts_against_the_score
+
+428 tests collected in 1.58s
+
+## Python — estate/driver (separate invocation)
+
+8 tests collected in 0.05s
+
+## Python — full run
+....................................................................     [100%]
+428 passed in 5.60s
+
+## Python — estate/driver
+........                                                                 [100%]
+8 passed in 0.06s
+
+## Go
+### agent
+ok  	github.com/sentry/agent/internal/bpfcontract	(cached)
+?   	github.com/sentry/agent/internal/btf	[no test files]
+?   	github.com/sentry/agent/internal/config	[no test files]
+ok  	github.com/sentry/agent/internal/elfsym	0.807s
+ok  	github.com/sentry/agent/internal/identity	(cached)
+ok  	github.com/sentry/agent/internal/ship	(cached)
+?   	github.com/sentry/agent/tools	[no test files]
+### ingest
+?   	github.com/sentry/ingest/cmd/sentry-ingest	[no test files]
+?   	github.com/sentry/ingest/internal/config	[no test files]
+ok  	github.com/sentry/ingest/internal/server	0.445s
+ok  	github.com/sentry/ingest/internal/store	0.874s
+### honeypot
+?   	github.com/sentry/honeypot/cmd/sentry-honeypot	[no test files]
+ok  	github.com/sentry/honeypot/internal/routes	0.891s
+ok  	github.com/sentry/honeypot/internal/synth	0.462s
+
+## Console (vitest)
+
+ Test Files  10 passed (10)
+      Tests  38 passed (38)
+   Start at  14:59:08
+   Duration  1.92s (transform 1.04s, setup 0ms, collect 3.82s, tests 927ms, environment 5.67s, prepare 826ms)
+

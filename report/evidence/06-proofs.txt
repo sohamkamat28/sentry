@@ -1,0 +1,25 @@
+# Infrastructure proofs — 2026-08-09T09:31:52Z
+
+## 1. WORM immutability (MinIO Object Lock, COMPLIANCE) — the system verifying its own archive
+$ curl .../api/v1/decommission/ep_8f29b4446fd86166/worm/verify
+{
+    "object": "s3://sentry-worm/decommission/ep_8f29b4446fd86166/44710.json.gz",
+    "version_id": "39d9f44e-fae8-4156-909d-827691246c3a",
+    "lock_mode": "COMPLIANCE",
+    "retain_until": "2033-08-02T17:57:28Z",
+    "verified": true,
+    "delete_refused_with": "InvalidRequest",
+    "detail": "An error occurred (InvalidRequest) when calling the DeleteObject operation: Object is WORM protected and cannot be overwritten"
+}
+
+## 2. The shadow endpoint — in no gateway and no repository, found by the kernel probe alone
+  GET /internal/fx/rate
+  lifecycle=ACTIVE governance=SHADOW cdri=0.71 auth=none
+  sources for this endpoint:
+   ebpf is the exclusive source for 28 endpoints
+
+## 3. RBAC — the analyst/approver boundary, on the live control plane
+  POST /operations/scan  as viewer    -> HTTP 403
+  POST /operations/scan  as analyst   -> HTTP 409
+  POST /operations/scan  as approver  -> HTTP 409
+  (409 = a cycle already holds the lock, which is itself the serialisation proof)

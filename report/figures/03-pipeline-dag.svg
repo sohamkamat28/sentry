@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1174 390" width="1174" height="390" font-family="Helvetica, Arial, sans-serif">
+<rect width="1174" height="390" fill="#ffffff"/>
+<text x="28" y="30" font-size="12.5" font-weight="bold" fill="#24292f" letter-spacing="1.1">THE 14-STAGE PIPELINE — the dependency graph, read from STAGE_DEPS</text>
+<text x="28" y="50" font-size="10.5" fill="#57606a">Columns are dependency depth. Execution order is a topological sort of this graph, tie-broken by stage number so a run is reproducible.</text>
+<text x="28" y="66" font-size="10.5" fill="#57606a">A stage that raises is recorded and skipped, its dependants are skipped with a stated reason, and the cycle completes and reports partial.</text>
+<defs><marker id="d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8c959f"/></marker>
+<marker id="dr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#cf222e"/></marker></defs>
+<path d="M132 104.0 C158 104.0 254 104.0 280 104.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M258 104.0 C284 104.0 254 104.0 280 104.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M132 104.0 C158 104.0 128 104.0 154 104.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M384 104.0 C410 104.0 380 104.0 406 104.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M258 104.0 C284 104.0 380 104.0 406 104.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M510 104.0 C536 104.0 506 104.0 532 104.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M636 104.0 C662 104.0 632 104.0 658 104.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M510 104.0 C536 104.0 506 180.0 532 180.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M762 104.0 C788 104.0 758 104.0 784 104.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M636 180.0 C662 180.0 758 104.0 784 104.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M384 180.0 C410 180.0 758 104.0 784 104.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M258 104.0 C284 104.0 254 180.0 280 180.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M762 104.0 C788 104.0 884 104.0 910 104.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M888 104.0 C914 104.0 884 104.0 910 104.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M384 180.0 C410 180.0 884 104.0 910 104.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M510 104.0 C536 104.0 506 256.0 532 256.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M384 180.0 C410 180.0 506 256.0 532 256.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M258 104.0 C284 104.0 632 180.0 658 180.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M636 256.0 C662 256.0 632 180.0 658 180.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M762 104.0 C788 104.0 1010 104.0 1036 104.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M1014 104.0 C1040 104.0 1010 104.0 1036 104.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M762 104.0 C788 104.0 758 180.0 784 180.0" fill="none" stroke="#8c959f" stroke-width="1.15" marker-end="url(#d)" opacity="0.9"/>
+<path d="M584.0 200 C584.0 230 458.0 154 458.0 124" fill="none" stroke="#cf222e" stroke-width="1.4" stroke-dasharray="5 3" marker-end="url(#dr)"/>
+<rect x="28" y="84" width="104" height="40" rx="3" fill="#ffffff" stroke="#24292f" stroke-width="1.2"/>
+<text x="36" y="99" font-size="9.5" font-weight="bold" fill="#8c959f">01</text>
+<text x="80.0" y="114" font-size="10.5" fill="#24292f" text-anchor="middle">Sensor Grid</text>
+<rect x="280" y="84" width="104" height="40" rx="3" fill="#ffffff" stroke="#24292f" stroke-width="1.2"/>
+<text x="288" y="99" font-size="9.5" font-weight="bold" fill="#8c959f">02</text>
+<text x="332.0" y="114" font-size="10.5" fill="#24292f" text-anchor="middle">Baseline</text>
+<rect x="154" y="84" width="104" height="40" rx="3" fill="#ffffff" stroke="#24292f" stroke-width="1.2"/>
+<text x="162" y="99" font-size="9.5" font-weight="bold" fill="#8c959f">03</text>
+<text x="206.0" y="114" font-size="10.5" fill="#24292f" text-anchor="middle">Correlation</text>
+<rect x="406" y="84" width="104" height="40" rx="3" fill="#ffffff" stroke="#24292f" stroke-width="1.2"/>
+<text x="414" y="99" font-size="9.5" font-weight="bold" fill="#8c959f">04</text>
+<text x="458.0" y="114" font-size="10.5" fill="#24292f" text-anchor="middle">Classification</text>
+<rect x="532" y="84" width="104" height="40" rx="3" fill="#ffffff" stroke="#24292f" stroke-width="1.2"/>
+<text x="540" y="99" font-size="9.5" font-weight="bold" fill="#8c959f">05</text>
+<text x="584.0" y="114" font-size="10.5" fill="#24292f" text-anchor="middle">Behaviour</text>
+<rect x="658" y="84" width="104" height="40" rx="3" fill="#ffffff" stroke="#24292f" stroke-width="1.2"/>
+<text x="666" y="99" font-size="9.5" font-weight="bold" fill="#8c959f">06</text>
+<text x="710.0" y="114" font-size="10.5" fill="#24292f" text-anchor="middle">CDRI</text>
+<rect x="532" y="160" width="104" height="40" rx="3" fill="#ffffff" stroke="#24292f" stroke-width="1.2"/>
+<text x="540" y="175" font-size="9.5" font-weight="bold" fill="#8c959f">07</text>
+<text x="584.0" y="190" font-size="10.5" fill="#24292f" text-anchor="middle">Forecast</text>
+<rect x="784" y="84" width="104" height="40" rx="3" fill="#ffffff" stroke="#24292f" stroke-width="1.2"/>
+<text x="792" y="99" font-size="9.5" font-weight="bold" fill="#8c959f">08</text>
+<text x="836.0" y="114" font-size="10.5" fill="#24292f" text-anchor="middle">Findings</text>
+<rect x="280" y="160" width="104" height="40" rx="3" fill="#ffffff" stroke="#24292f" stroke-width="1.2"/>
+<text x="288" y="175" font-size="9.5" font-weight="bold" fill="#8c959f">09</text>
+<text x="332.0" y="190" font-size="10.5" fill="#24292f" text-anchor="middle">Blast Radius</text>
+<rect x="910" y="84" width="104" height="40" rx="3" fill="#ffffff" stroke="#24292f" stroke-width="1.2"/>
+<text x="918" y="99" font-size="9.5" font-weight="bold" fill="#8c959f">10</text>
+<text x="962.0" y="114" font-size="10.5" fill="#24292f" text-anchor="middle">Remediation</text>
+<rect x="532" y="236" width="104" height="40" rx="3" fill="#ffffff" stroke="#24292f" stroke-width="1.2"/>
+<text x="540" y="251" font-size="9.5" font-weight="bold" fill="#8c959f">11</text>
+<text x="584.0" y="266" font-size="10.5" fill="#24292f" text-anchor="middle">Decommission</text>
+<rect x="658" y="160" width="104" height="40" rx="3" fill="#ffffff" stroke="#24292f" stroke-width="1.2"/>
+<text x="666" y="175" font-size="9.5" font-weight="bold" fill="#8c959f">12</text>
+<text x="710.0" y="190" font-size="10.5" fill="#24292f" text-anchor="middle">Threat</text>
+<rect x="1036" y="84" width="104" height="40" rx="3" fill="#ffffff" stroke="#24292f" stroke-width="1.2"/>
+<text x="1044" y="99" font-size="9.5" font-weight="bold" fill="#8c959f">13</text>
+<text x="1088.0" y="114" font-size="10.5" fill="#24292f" text-anchor="middle">Zero-Trust</text>
+<rect x="784" y="160" width="104" height="40" rx="3" fill="#ffffff" stroke="#24292f" stroke-width="1.2"/>
+<text x="792" y="175" font-size="9.5" font-weight="bold" fill="#8c959f">14</text>
+<text x="836.0" y="190" font-size="10.5" fill="#24292f" text-anchor="middle">Operations</text>
+<text x="28" y="344" font-size="10.5" fill="#cf222e">Dashed red: stage 07 writes pre_zombie back onto the stage-04 record. It is not an edge in the graph — 04 does not depend on 07 — so it is drawn as what it is: a write-back.</text>
+<text x="28" y="362" font-size="10.5" fill="#57606a">Two orderings correct the specification this was built from. 03 precedes 02 because the daily rollup aggregates by an endpoint identity that correlation produces.</text>
+<text x="28" y="378" font-size="10.5" fill="#57606a">05 precedes 06 because the CDRI formula consumes a behavioural anomaly term; the reverse would have a stage read an input from its own future.</text>
+</svg>

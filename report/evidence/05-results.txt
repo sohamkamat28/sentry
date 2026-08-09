@@ -1,0 +1,55 @@
+# Measured results — single frozen capture, 2026-08-09T09:39:58+00:00
+# Source: report/evidence/00-bundle.json. Every figure below is derived from that file.
+
+## Estate
+  endpoints 48   retired 4   mean CDRI 0.6328   vday 84931
+  lifecycle  {'DEPRECATED': 1, 'ACTIVE': 42, 'ZOMBIE': 5}
+  governance {'SHADOW': 33, 'ORPHANED': 10, 'OWNED': 5}
+  tiers      {'CRITICAL': 5, 'HIGH': 43}
+
+## Discovery — shadow_count 33, shadow_reliable True
+  source    endpoints exclusive  healthy
+  ebpf             44        28  True
+  gateway          15         3  True
+  code              6         0  True
+  legacy            5         1  True
+  TOTAL            70   sightings
+  correlation: 70 sightings -> 48 endpoints, dedup ratio 1.458
+
+## Classification matrix
+  ACTIVE      x SHADOW    = 29
+  ACTIVE      x ORPHANED  = 9
+  ZOMBIE      x SHADOW    = 4
+  ACTIVE      x OWNED     = 4
+  DEPRECATED  x OWNED     = 1
+  ZOMBIE      x ORPHANED  = 1
+  total = 48   confidence = {'CONFIRMED': 48}
+
+## Behaviour  fitted=True fitted_on=44 scored=48 flagged=3 (min fit 30)
+
+## Zero-trust  distribution {'0': 11, '1': 23, '2': 2, '3': 5, '4': 3, '5': 0}
+  gaps {'auth': 38, 'tls': 34, 'binding': 44, 'ratelimit': 39, 'response': 11}
+
+## Findings  48 findings, 259 regulatory clause rows, generators {'template': 48}
+
+## Audit chain  ok=True  entries=754  broken_at=None
+
+## Pipeline run 3132 — trigger scheduled, ok True
+  started 2026-08-09T09:37:55.008191Z  finished 2026-08-09T09:39:36.476637Z
+   #  stage            depends on     records       ms  ok
+   1  Sensor Grid      []                  24      274  True
+   2  Baseline         [1, 3]          263265    78541  True
+   3  Correlation      [1]                 43      912  True
+   4  Classification   [2, 3]              44      125  True
+   5  Behaviour        [4]                 44     3070  True
+   6  CDRI             [5]                 44       31  True
+   7  Forecast         [4]                 41     2812  True
+   8  Findings         [6, 7, 9]           44      284  True
+   9  Blast Radius     [3]                 48       20  True
+  10  Remediation      [6, 8, 9]            0      643  True
+  11  Decommission     [4, 9]               0     3944  True
+  12  Threat           [3, 11]              0    10629  True
+  13  Zero-Trust       [6, 10]             44       47  True
+  14  Operations       [6]                124      101  True
+      TOTAL                            263765   101433
+  wall clock 101468 ms; stage durations sum to 101433 ms (delta 35 ms => execution is serial)

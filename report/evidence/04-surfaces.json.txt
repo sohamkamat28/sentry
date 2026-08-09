@@ -1,0 +1,614 @@
+# Analytical surfaces — captured 2026-08-09T09:30:10Z
+# Every figure below is a live read from the running control plane.
+
+======== GET /api/v1/system ========
+{
+    "org": "Reference Bank",
+    "vday": 84872,
+    "endpoints": 48,
+    "retired": 4,
+    "lifecycle": {
+        "DEPRECATED": 1,
+        "ACTIVE": 34,
+        "ZOMBIE": 13
+    },
+    "governance": {
+        "SHADOW": 33,
+        "ORPHANED": 10,
+        "OWNED": 5
+    },
+    "tiers": {
+        "HIGH": 42,
+        "CRITICAL": 6
+    },
+    "mean_cdri": 0.6695
+}
+
+======== GET /api/v1/discovery ========
+{
+    "vday": 84872,
+    "sources": [
+        {
+            "source": "ebpf",
+            "endpoints": 44,
+            "observations_24v": 341,
+            "exclusive": 28,
+            "healthy": true
+        },
+        {
+            "source": "gateway",
+            "endpoints": 15,
+            "observations_24v": 0,
+            "exclusive": 3,
+            "healthy": true
+        },
+        {
+            "source": "code",
+            "endpoints": 6,
+            "observations_24v": 0,
+            "exclusive": 0,
+            "healthy": true
+        },
+        {
+            "source": "legacy",
+            "endpoints": 5,
+            "observations_24v": 0,
+            "exclusive": 1,
+            "healthy": true
+        }
+    ],
+    "shadow_reliable": true,
+    "shadow_count": 33
+}
+
+======== GET /api/v1/classification ========
+{
+    "vday": 84872,
+    "matrix": [
+        {
+            "lifecycle": "DEPRECATED",
+            "governance": "OWNED",
+            "n": 1
+        },
+        {
+            "lifecycle": "ACTIVE",
+            "governance": "ORPHANED",
+            "n": 8
+        },
+        {
+            "lifecycle": "ZOMBIE",
+            "governance": "ORPHANED",
+            "n": 2
+        },
+        {
+            "lifecycle": "ZOMBIE",
+            "governance": "SHADOW",
+            "n": 11
+        },
+        {
+            "lifecycle": "ACTIVE",
+            "governance": "OWNED",
+            "n": 4
+        },
+        {
+            "lifecycle": "ACTIVE",
+            "governance": "SHADOW",
+            "n": 22
+        }
+    ],
+    "confidence": {
+        "CONFIRMED": 48
+    },
+    "shadow_reliable": true
+}
+
+======== GET /api/v1/correlation ========
+{
+    "sightings": 70,
+    "endpoints": 48,
+    "dedup_ratio": 1.458,
+    "ownership": {
+        "resolved_by": {
+            "unresolved": 42,
+            "git-blame": 2,
+            "codeowners": 4
+        },
+        "unreachable": 43
+    },
+    "shadow_reliable": true,
+    "window_vdays": 90
+}
+
+======== GET /api/v1/behaviour ========
+{
+    "fitted": true,
+    "fitted_on": 44,
+    "min_fit_endpoints": 30,
+    "withheld": null,
+    "flagged": 3,
+    "scored": 48,
+    "patterns": {},
+    "excluded_insufficient_history": 0,
+    "items": [
+        {
+            "endpoint_id": "ep_b32ed95db9f7dd72",
+            "score": -0.663907,
+            "isolation_depth": 0.5909,
+            "patterns": []
+        },
+        {
+            "endpoint_id": "ep_157501477264a187",
+            "score": -0.65005,
+            "isolation_depth": 0.6214,
+            "patterns": []
+        },
+        {
+            "endpoint_id": "ep_905688b2e549233f",
+            "score": -0.664902,
+            "isolation_depth": 0.5888,
+            "patterns": []
+        }
+    ]
+}
+
+======== GET /api/v1/forecast ========
+{
+    "flagged": 0,
+    "active": 34,
+    "flagged_ratio": 0.0,
+    "items": [
+        {
+            "endpoint_id": "ep_7bf33b50216c3d57",
+            "method": "POST",
+            "path": "/finacle/customerservice",
+            "days_to_zombie": 72,
+            "slope": -0.005008929336824597,
+            "signals": {
+                "call_volume": 0.005,
+                "commit_recency": 0.5,
+                "commit_estimated": true,
+                "owner_activity": 1.0,
+                "composite": 0.3525
+            },
+            "deseasonalised": true
+        }
+    ]
+}
+
+======== GET /api/v1/findings ========
+{
+    "generators": {
+        "template": 48
+    },
+    "items": [
+        {
+            "id": "fnd_4624496b50a9807f",
+            "endpoint_id": "ep_0065c2aeb9383752",
+            "method": "GET",
+            "path": "/api/v1/kyc/{id}",
+            "generator": "template",
+            "model": null,
+            "narrative": {
+                "summary": "Estimated 19 days before active exploitation (heuristic). GET /api/v1/kyc/{id} was last called 0 days ago. It enforces no authentication. Responses have been observed to carry Aadhaar numbers, account numbers, dates of birth and PAN numbers. Transport is unencrypted.",
+                "technical": "CDRI 0.71 (HIGH). No authentication 1.0x0.28, PII / financial data 1.0x0.20, TLS below 1.3 1.0x0.15, No rate limiting 1.0x0.08 Blast radius LOW: 1 direct caller(s).",
+                "action": "Assign an owner and schedule remediation within 48 hours."
+            },
+            "regulations": [
+                {
+                    "framework": "RBI API Security 2023",
+                    "clause": "Section 4.2",
+                    "requirement": "Authentication enforcement",
+                    "status": "VIOLATED",
+                    "evidence": "auth = none"
+                },
+                {
+                    "framework": "RBI API Security 2023",
+                    "clause": "Section 5.1",
+                    "requirement": "Transport encryption",
+                    "status": "VIOLATED",
+                    "evidence": "tls_version = none"
+                },
+                {
+                    "framework": "DPDP Act 2023",
+                    "clause": "Section 8",
+                    "requirement": "Data minimisation",
+                    "status": "VIOLATED",
+                    "evidence": "data_classes contains ['AADHAAR', 'ACCOUNT_NO', 'DOB', 'PAN']"
+                },
+                {
+                    "framework": "NYDFS Part 500",
+                    "clause": "Section 500.06",
+                    "requirement": "Audit trail",
+                    "status": "SATISFIED",
+                    "evidence": "SENTRY hash-chained audit ledger"
+                }
+            ],
+            "time_to_breach_d": 19,
+            "vday": 84859
+        },
+        {
+            "id": "fnd_55160de7e9e5ed19",
+            "endpoint_id": "ep_0267f097662c744d",
+            "method": "GET",
+            "path": "/openapi.json",
+            "generator": "template",
+            "model": null,
+            "narrative": {
+                "summary": "Estimated 15 days before active exploitation (heuristic). GET /openapi.json has not been called in 16774 days and remains registered and reachable. It appears in no gateway registry and in no code repository, so it is subject to no authentication policy, no rate limiting and no monitoring. It enforces no authentication. Transport is unencrypted.",
+                "technical": "CDRI 0.73 (HIGH). No authentication 1.0x0.28, Zombie status 1.0x0.22, TLS below 1.3 1.0x0.15, No rate limiting 1.0x0.08 Blast radius ZERO: 0 direct caller(s).",
+
+======== GET /api/v1/zerotrust ========
+{
+    "distribution": {
+        "0": 11,
+        "1": 23,
+        "2": 2,
+        "3": 5,
+        "4": 3,
+        "5": 0
+    },
+    "gaps": {
+        "auth": 38,
+        "tls": 34,
+        "binding": 44,
+        "ratelimit": 39,
+        "response": 11
+    },
+    "items": [
+        {
+            "endpoint_id": "ep_b32ed95db9f7dd72",
+            "method": "GET",
+            "path": "/api/v2/balance-v2",
+            "satisfied": 0,
+            "of": 5,
+            "priority": 1.0,
+            "controls": [
+                {
+                    "key": "auth",
+                    "ok": false,
+                    "current": "none",
+                    "remedy": "oauth2",
+                    "requires_migration": true
+                },
+                {
+                    "key": "tls",
+                    "ok": false,
+                    "current": null,
+                    "remedy": "tls-min",
+                    "requires_migration": false
+                },
+                {
+                    "key": "binding",
+                    "ok": false,
+                    "current": null,
+                    "remedy": "dpop",
+                    "requires_migration": true
+                },
+                {
+                    "key": "ratelimit",
+                    "ok": false,
+                    "current": false,
+                    "remedy": "rate-limit",
+                    "requires_migration": false
+                },
+                {
+                    "key": "response",
+                    "ok": false,
+                    "current": [
+                        "AADHAAR"
+                    ],
+                    "remedy": "response-mask",
+
+======== GET /api/v1/decommission ========
+{
+    "vday": 84872,
+    "by_phase": {
+        "C": 40,
+        "RETIRED": 4
+    },
+    "items": [
+        {
+            "endpoint_id": "ep_b32ed95db9f7dd72",
+            "method": "GET",
+            "path": "/api/v2/balance-v2",
+            "phase": "C",
+            "express": true,
+            "canary": false,
+            "canary_split": null,
+            "entered_vday": 343,
+            "phase_vday": 373,
+            "hold": true,
+            "hold_reason": "operator",
+            "hidden_callers": [
+                {
+                    "service": "container:134754fcbb82",
+                    "ip": "172.19.0.17",
+                    "first_vday": 23702,
+                    "calls": 80
+                },
+                {
+                    "service": "unresolved:unknown",
+                    "ip": null,
+                    "first_vday": 5254,
+                    "calls": 60
+                }
+            ],
+            "worm_object": null,
+            "worm_retain_until": null,
+            "certificate_id": null
+        },
+        {
+            "endpoint_id": "ep_951f7b87f1815559",
+            "method": "GET",
+            "path": "/api/v1/payments/upi/{id}",
+            "phase": "C",
+            "express": true,
+            "canary": false,
+            "canary_split": null,
+            "entered_vday": 8979,
+            "phase_vday": 9056,
+            "hold": true,
+            "hold_reason": "operator",
+            "hidden_callers": [],
+            "worm_object": null,
+            "worm_retain_until": null,
+            "certificate_id": null
+        },
+        {
+            "endpoint_id": "ep_157501477264a187",
+            "method": "GET",
+            "path": "/api/v1/payments/upi/{id}",
+            "phase": "C",
+            "express": true,
+
+======== GET /api/v1/threat ========
+{
+    "honeypots_active": 2,
+    "probes_total": 3,
+    "unique_sources": 1,
+    "fingerprints": 4,
+    "threshold": 0.85,
+    "legal_signoff": {
+        "reference": "policy:LEGAL-2026-004",
+        "signed": true
+    },
+    "probes": [
+        {
+            "id": 3,
+            "at": "2026-07-30T14:24:18.913743Z",
+            "vday": 237,
+            "endpoint_id": "ep_6696d6f326fd4628",
+            "source_ip": "172.19.0.18",
+            "source_asn": null,
+            "watermark": "wm_05d1e78f12cacd52"
+        },
+        {
+            "id": 2,
+            "at": "2026-07-30T14:24:18.901966Z",
+            "vday": 237,
+            "endpoint_id": "ep_6696d6f326fd4628",
+            "source_ip": "172.19.0.18",
+            "source_asn": null,
+            "watermark": "wm_e55b04f4f4f67db0"
+        },
+        {
+            "id": 1,
+            "at": "2026-07-30T14:24:18.889217Z",
+            "vday": 237,
+            "endpoint_id": "ep_6696d6f326fd4628",
+            "source_ip": "172.19.0.18",
+            "source_asn": null,
+            "watermark": "wm_558818c6d591709c"
+        }
+    ],
+    "alerts": [
+        {
+            "new_endpoint_id": "ep_2af9e239f6112eb9",
+            "origin_path": "/api/v1/nostro/{id}/positions",
+            "similarity": 1.0,
+            "threshold": 0.85,
+            "lsh_hit": true,
+            "vday": 49440
+        },
+        {
+            "new_endpoint_id": "ep_cf24f1dbe524041e",
+            "origin_path": "/api/v1/legacy-balance",
+            "similarity": 0.9,
+            "threshold": 0.85,
+            "lsh_hit": true,
+            "vday": 23611
+        },
+        {
+            "new_endpoint_id": "ep_2af9e239f6112eb9",
+            "origin_path": "/api/v1/legacy-balance",
+            "similarity": 0.9,
+
+======== GET /api/v1/operations ========
+{
+    "vday": 84872,
+    "scan_interval_vhours": 6,
+    "scheduler_enabled": true,
+    "siem": {
+        "host": "rsyslog",
+        "format": "cef",
+        "configured": true
+    },
+    "stages": {
+        "1": "Sensor Grid",
+        "2": "Baseline",
+        "3": "Correlation",
+        "4": "Classification",
+        "5": "Behaviour",
+        "6": "CDRI",
+        "7": "Forecast",
+        "8": "Findings",
+        "9": "Blast Radius",
+        "10": "Remediation",
+        "11": "Decommission",
+        "12": "Threat",
+        "13": "Zero-Trust",
+        "14": "Operations"
+    },
+    "gate_events": [
+        {
+            "repo": "bank/core",
+            "pr": 42,
+            "sha": "deadbeef",
+            "passed": false,
+            "checks": [
+                {
+                    "name": "owner-tag",
+                    "passed": true,
+                    "severity": "error",
+                    "file": "src/new.py",
+                    "line": 10
+                },
+                {
+                    "name": "auth-middleware",
+                    "passed": true,
+                    "severity": "error",
+                    "file": "src/new.py",
+                    "line": 10
+                },
+                {
+                    "name": "catalogue-registration",
+                    "passed": true,
+                    "severity": "warn",
+                    "file": "src/new.py",
+                    "line": 10
+                },
+                {
+                    "name": "no-resurrection",
+                    "passed": false,
+                    "severity": "error",
+                    "detail": "GET /api/v3/acct-balance matches retired /api/v1/legacy-balance at 1.00",
+                    "file": "src/new.py",
+                    "line": 10
+
+======== GET /api/v1/audit/verify ========
+{
+    "ok": true,
+    "entries": 754,
+    "broken_at": null,
+    "reason": null
+}
+
+======== GET /api/v1/pipeline ========
+{
+    "vday": 84872,
+    "run": {
+        "id": 3127,
+        "trigger": "scheduled",
+        "started_at": "2026-08-09T09:28:02.163562Z",
+        "finished_at": "2026-08-09T09:29:47.262153Z",
+        "ok": true
+    },
+    "stages": [
+        {
+            "stage": 1,
+            "name": "Sensor Grid",
+            "depends_on": [],
+            "ok": true,
+            "records": 24,
+            "duration_ms": 334,
+            "error": null
+        },
+        {
+            "stage": 3,
+            "name": "Correlation",
+            "depends_on": [
+                1
+            ],
+            "ok": true,
+            "records": 35,
+            "duration_ms": 1899,
+            "error": null
+        },
+        {
+            "stage": 2,
+            "name": "Baseline",
+            "depends_on": [
+                1,
+                3
+            ],
+            "ok": true,
+            "records": 260385,
+            "duration_ms": 79216,
+            "error": null
+        },
+        {
+            "stage": 9,
+            "name": "Blast Radius",
+            "depends_on": [
+                3
+            ],
+            "ok": true,
+            "records": 48,
+            "duration_ms": 19,
+            "error": null
+        },
+        {
+            "stage": 4,
+            "name": "Classification",
+            "depends_on": [
+                2,
+                3
+            ],
+
+======== GET /api/v1/live ========
+{
+    "vday": 84872,
+    "scale_seconds": 30,
+    "observed": {
+        "total": 169,
+        "ebpf": 4594,
+        "gateway": 0,
+        "code": 0,
+        "legacy": 0
+    },
+    "source": "redis",
+    "counters": {
+        "sentry_scan_skipped_total": 59
+    },
+    "health": [
+        {
+            "component": "agent",
+            "state": "ok",
+            "last_vday": 84872,
+            "vdays_behind": 0
+        },
+        {
+            "component": "gateway",
+            "state": "stale",
+            "last_vday": 84859,
+            "vdays_behind": 13
+        },
+        {
+            "component": "code",
+            "state": "stale",
+            "last_vday": 84859,
+            "vdays_behind": 13
+        },
+        {
+            "component": "legacy",
+            "state": "stale",
+            "last_vday": 84859,
+            "vdays_behind": 13
+        },
+        {
+            "component": "redis",
+            "state": "ok",
+            "last_vday": null,
+            "vdays_behind": null
+        }
+    ],
+    "pipeline": {
+        "run_id": 3127,
+        "trigger": "scheduled",
+        "started_at": "2026-08-09T09:28:02.163562Z",
+        "ok": true,
+        "running": false,
+        "stages_done": 14,
+        "stages_total": 14
+    }
+}

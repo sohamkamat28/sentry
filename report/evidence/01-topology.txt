@@ -1,0 +1,33 @@
+# Service topology — captured 2026-08-09T09:26:58Z
+
+## Platform stack (deploy/compose/compose.yaml)
+SERVICE    IMAGE                             STATUS                    PORTS
+agent      sentry-agent                      Up 47 seconds             
+api        sentry-api                        Up 45 seconds (healthy)   0.0.0.0:8080->8000/tcp, [::]:8080->8000/tcp
+beat       sentry-beat                       Up 39 seconds             
+console    sentry-console                    Up 39 seconds (healthy)   0.0.0.0:5173->80/tcp, [::]:5173->80/tcp
+honeypot   sentry-honeypot                   Up 52 seconds             0.0.0.0:8088->8088/tcp, [::]:8088->8088/tcp
+ingest     sentry-ingest                     Up 47 seconds             0.0.0.0:9090->9090/tcp, [::]:9090->9090/tcp
+keycloak   quay.io/keycloak/keycloak:26.0    Up 52 seconds             0.0.0.0:8081->8081/tcp, [::]:8081->8081/tcp
+kong       kong:3.8                          Up 42 seconds (healthy)   0.0.0.0:8000-8001->8000-8001/tcp, [::]:8000-8001->8000-8001/tcp, 0.0.0.0:8443->8443/tcp, [::]:8443->8443/tcp
+minio      minio/minio:latest                Up 52 seconds (healthy)   0.0.0.0:9000-9001->9000-9001/tcp, [::]:9000-9001->9000-9001/tcp
+postgres   postgres:16-alpine                Up 52 seconds (healthy)   0.0.0.0:55432->5432/tcp, [::]:55432->5432/tcp
+redis      redis:7-alpine                    Up 52 seconds (healthy)   6379/tcp
+rsyslog    rsyslog/syslog_appliance_alpine   Up 52 seconds             0.0.0.0:514->514/tcp, 0.0.0.0:514->514/udp, [::]:514->514/tcp, [::]:514->514/udp
+worker     sentry-worker                     Up 39 seconds             
+
+## Reference estate (estate/compose.yaml)
+SERVICE           STATUS
+cards-auth        Up 24 seconds
+core-accounts     Up 24 seconds
+core-deposits     Up 24 seconds
+finacle-bridge    Up 24 seconds
+kyc-service       Up 24 seconds
+nostro-sync       Up 24 seconds
+partner-gateway   Up 24 seconds
+payments-upi      Up 23 seconds
+payments-upi-v2   Up 23 seconds
+recon-quarterly   Up 24 seconds
+settlement-rtgs   Up 23 seconds
+shadow-fx-rate    Up 24 seconds
+traffic           Up 23 seconds
