@@ -5,7 +5,7 @@
 August 2026
 
 Repository — <https://github.com/sohamkamat28/sentry>\
-Demo — <https://sohamkamat28.github.io/sentry/>
+Demo — <https://sentry-sage.vercel.app>
 
 > The demo serves a frozen capture of a real run. The subject of this report is the
 > system that produced it: a Docker Compose stack of 25 services, a kernel sensor,
