@@ -87,7 +87,7 @@ export function post<T>(path: string, body?: unknown): Promise<T> {
   // render this as a plain refusal.
   if (STATIC_MODE) {
     return Promise.reject(
-      new ApiError(0, "RECORDING", "this is a recorded run — actions are read-only here"),
+      new ApiError(0, "RECORDING", "recorded run — actions are read-only here"),
     );
   }
   return request<T>(path, {

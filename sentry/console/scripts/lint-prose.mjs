@@ -30,12 +30,23 @@ const STRING_LITERAL = /(?:"([^"\\]*(?:\\.[^"\\]*)*)"|'([^'\\]*(?:\\.[^'\\]*)*)'
 // blocks accurate test names to enforce a rule about UI copy.
 const IS_TEST = /\.(test|spec)\.tsx?$/;
 
+// The guided tour is the one surface whose job is to explain.
+//
+// It renders only on the published recording, where the reader is not the
+// analyst this rule protects — they have never seen the domain and are being
+// walked through it deliberately. Every other string in the console still
+// answers to the rule; exempting the tour keeps that rule strict everywhere it
+// applies rather than softening the patterns for everyone to accommodate one
+// file whose copy is supposed to teach.
+const IS_TOUR = /lib[/\\]tour\.ts$/;
+
 function walk(dir) {
   const out = [];
   for (const e of readdirSync(dir)) {
     const p = join(dir, e);
     if (statSync(p).isDirectory()) out.push(...walk(p));
-    else if ([".tsx", ".ts"].includes(extname(p)) && !IS_TEST.test(p)) out.push(p);
+    else if ([".tsx", ".ts"].includes(extname(p)) && !IS_TEST.test(p) && !IS_TOUR.test(p))
+      out.push(p);
   }
   return out;
 }
