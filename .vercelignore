@@ -1,0 +1,28 @@
+# Everything the console build does not read.
+#
+# The deployed artefact is a static build of `sentry/console`, which touches
+# only that directory and the recording committed inside its `public/`. The
+# control plane, the kernel agent, the reference estate and the design set stay
+# in the repository — they are the project — but uploading them to a build that
+# cannot use them only slows the deploy and gives framework detection more to
+# be wrong about.
+
+design/
+.github/
+
+sentry/agent/
+sentry/api/
+sentry/core/
+sentry/worker/
+sentry/estate/
+sentry/deploy/
+sentry/tools/
+sentry/contracts/
+
+# A downloaded copy of this repository that sits in the working tree. Untracked,
+# so it never reaches GitHub — but a CLI deploy uploads the directory, not the
+# commit, and this would go with it.
+sentry-main/
+
+.DS_Store
+.claude/
