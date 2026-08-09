@@ -4,6 +4,8 @@ API lifecycle security platform. Discovers every endpoint in a service estate �
 
 Built from [`../design/`](../design). Every stage document there is the specification for the corresponding module here.
 
+A twelve-page technical report on the running system — architecture, the kernel sensor, the pipeline, and results measured from one frozen capture — is at [`../report/REPORT.md`](../report/REPORT.md), with the PDF at [`../SENTRY-report.pdf`](../SENTRY-report.pdf) and the raw evidence in [`../report/evidence/`](../report/evidence). Its figures supersede the counts below where the two disagree: this file records what was true when each line was written, and the report re-measured everything on 2026-08-09.
+
 ---
 
 ## The property that matters
