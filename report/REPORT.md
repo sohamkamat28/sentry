@@ -2,9 +2,9 @@
 
 **An API lifecycle security platform for banking estates**
 
-*&lt;author names&gt;* · August 2026
+August 2026
 
-Repository — <https://github.com/sohamkamat28/sentry>
+Repository — <https://github.com/sohamkamat28/sentry>\
 Demo — <https://sohamkamat28.github.io/sentry/>
 
 > The demo serves a frozen capture of a real run. The subject of this report is the
