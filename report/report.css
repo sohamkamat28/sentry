@@ -105,6 +105,11 @@ img {
 /* Screenshots carry a hairline so a dark UI does not bleed into the page. */
 img[src$=".png"] { border: 1px solid #ccc; }
 
+/* Pandoc turns a lone image into a figure and repeats its alt text underneath.
+   Every figure here already carries its own title, and the prose around it says
+   what it shows, so the repeat is noise. The alt text stays in the markup. */
+figcaption, p.caption { display: none; }
+
 /* ── Code ──────────────────────────────────────────────────────────────── */
 code {
   font-family: "SF Mono", Menlo, Consolas, monospace;

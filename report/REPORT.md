@@ -215,8 +215,10 @@ Two orderings are deliberate corrections of the specification they were built
 from. **Stage 03 runs before 02**, because the daily rollup aggregates by endpoint
 and endpoint identity is what correlation produces. **Stage 05 runs before 06**,
 because the CDRI formula consumes a behavioural anomaly term; the reverse would
-have a stage read an input from its own future. One back-edge is declared and
-legal: stage 07 writes `pre_zombie` back onto the stage-04 record.
+have a stage read an input from its own future. One write-back is declared and
+legal: stage 07 writes `pre_zombie` onto the stage-04 record. It is not an edge
+in the graph — 04 does not depend on 07 — so it constrains nothing, which is
+why the figure draws it apart from the dependencies.
 
 **Scoring.** CDRI is a weighted composite of six terms — missing authentication
 (0.28), zombie status (0.22), data exposure (0.20), TLS below 1.3 (0.15), no rate
